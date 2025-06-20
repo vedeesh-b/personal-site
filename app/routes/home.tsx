@@ -1,5 +1,8 @@
+import Navbar from "~/components/navbar";
 import type { Route } from "./+types/home";
-import { Welcome } from "../welcome/welcome";
+import "../app.css";
+import Landing from "./landing";
+import Footer from "~/components/footer";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -9,5 +12,13 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
-  return <Welcome />;
+  return (
+    <>
+      <Navbar />
+      <div id="layout-container">
+        <Landing />
+      </div>
+      <Footer />
+    </>
+  );
 }
