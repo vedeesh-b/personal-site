@@ -25,10 +25,14 @@ body {
   align-items: center;
   flex-direction: column;
   gap: 4px;
+  width: 33%;
 }
 
-#headshot > img {
-  width: 50%;
+#project-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #landing-section {
@@ -57,7 +61,7 @@ i {
   align-items: center;
   justify-content: center;
   display: flex;
-  height: calc(86vh - 10rem);
+  height: calc(85vh - 5.2rem);
 }
 
 #about {

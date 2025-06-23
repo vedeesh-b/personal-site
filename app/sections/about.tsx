@@ -9,7 +9,7 @@ export default function About() {
           src={headshot}
           alt="Vedeesh Bali in Amsterdam, Netherlands."
           style={{
-            width: "300px",
+            width: "100%",
             maxWidth: "100%",
             height: "auto",
           }}

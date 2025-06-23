@@ -21,7 +21,7 @@ export default function Card({ layout, src, alt }: CardProps) {
         {layout.text && <div>{layout.text}</div>}
         {layout.btn && <div>{layout.btn}</div>}
       </div>
-      <img src={src} alt={alt} width="180px" />
+      <img src={src} alt={alt} height="200px" />
     </div>
   );
 }
