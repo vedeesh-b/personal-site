@@ -1,7 +1,7 @@
 import Navbar from "~/components/navbar";
 import type { Route } from "./+types/home";
 import "../app.css";
-import Landing from "./landing";
+import Landing from "../pages/landing";
 import Footer from "~/components/footer";
 
 export function meta({}: Route.MetaArgs) {

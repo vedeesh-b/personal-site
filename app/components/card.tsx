@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import "./components.css";
 
-type CardProps = {
+export type CardProps = {
   layout: {
     key?: string | null;
     title?: string | null;

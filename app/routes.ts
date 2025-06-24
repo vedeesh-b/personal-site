@@ -7,4 +7,5 @@ export default [
     route("f1-datavis", "routes/projects/f1-datavis.tsx"),
     route("aac", "routes/projects/aac.tsx"),
   ]),
+  route("about", "routes/about.tsx")
 ] satisfies RouteConfig;
