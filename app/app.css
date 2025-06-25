@@ -140,8 +140,18 @@ i {
   width: 100%;
   gap: 5rem;
   justify-content: space-between;
+  margin-bottom: 5rem;
+}
+
+.about-card#landing {
+  margin-bottom: 0;
 }
 
 .about-card > div > p:first-child {
   margin-top: 0;
+}
+
+.about-card > div > p {
+  width: 55ch;
+  line-height: 22px;
 }
