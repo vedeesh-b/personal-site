@@ -22,7 +22,7 @@ button {
   background-color: #2e2f38;
   padding: 9px 16px;
   font-size: 13px;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   border-radius: 3px;
   cursor: pointer;
   outline: none;
@@ -128,4 +128,20 @@ i {
 
 .uppercase {
   text-transform: uppercase;
+}
+
+.page-container {
+  padding: 3rem 14rem;
+}
+
+.about-card {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  gap: 5rem;
+  justify-content: space-between;
+}
+
+.about-card > div > p:first-child {
+  margin-top: 0;
 }

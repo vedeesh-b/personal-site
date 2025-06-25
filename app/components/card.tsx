@@ -5,7 +5,7 @@ export type CardProps = {
   layout: {
     key?: string | null;
     title?: string | null;
-    text: string;
+    text: string | ReactNode;
     btn?: ReactNode | null;
   };
   src: string;
