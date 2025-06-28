@@ -3,6 +3,8 @@ import Footer from "~/components/footer";
 import Navbar from "~/components/navbar";
 
 import durdle_door from "../assets/durdle_door.webp";
+import GlobeComponent from "~/components/globe";
+import CountryList from "~/components/countryList";
 
 export default function About() {
   return (
@@ -73,6 +75,18 @@ export default function About() {
                 alt={infoCards.intro.alt}
               />
             </div>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              width: "100%",
+            }}
+          >
+            <CountryList />
+            <GlobeComponent />
           </div>
         </div>
       </div>

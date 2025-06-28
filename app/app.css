@@ -155,3 +155,17 @@ i {
   width: 55ch;
   line-height: 22px;
 }
+
+#globe-container canvas {
+  height: 370px;
+  width: 370px;
+  cursor: grab;
+  clip-path: circle(50% at 50% 50%);
+}
+
+#globe-container:active canvas {
+  height: 370px;
+  width: 370px;
+  cursor: grabbing;
+  clip-path: circle(50% at 50% 50%);
+}
