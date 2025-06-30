@@ -62,8 +62,8 @@ const GlobeComponent = () => {
     <div
       id="globe-container"
       style={{
-        width: 370,
-        height: 370,
+        width: 500,
+        height: 500,
         clipPath: "circle(50% at 50% 50%)",
         WebkitClipPath: "circle(50% at 50% 50%)",
         overflow: "hidden",
@@ -81,8 +81,8 @@ const GlobeComponent = () => {
         hexPolygonColor={(d: CountryType) =>
           setHexPolygonColor(d.properties.ADMIN)
         }
-        width={370}
-        height={370}
+        width={500}
+        height={500}
       />
     </div>
   );

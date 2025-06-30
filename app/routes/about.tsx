@@ -1,4 +1,3 @@
-import Card, { type CardProps } from "~/components/card";
 import Footer from "~/components/footer";
 import Navbar from "~/components/navbar";
 
@@ -23,8 +22,8 @@ export default function About() {
               />
             </div>
           </div>
-          <div>
-            <h1 style={{ maxWidth: "100%", width: "25ch" }}>
+          <div style={{ margin: '5rem 0' }}>
+            <h1 style={{ maxWidth: "100%", padding: '0 17rem' }}>
               Great products need{" "}
               <span
                 style={{
@@ -62,7 +61,10 @@ export default function About() {
             <div
               style={{
                 justifyContent: "space-between",
-                height: "100%",
+                minHeight: "100%",
+                display: 'flex',
+                flexDirection: 'column',
+                width: '50%'
               }}
             >
               {infoCards.photography.layout.text}

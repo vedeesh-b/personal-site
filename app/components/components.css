@@ -55,6 +55,10 @@ a {
   color: #2e2f38;
 }
 
+#countries-list {
+  width: 40%;
+}
+
 #countries-list > div {
-  margin-bottom: 8px;
+  margin-bottom: 16px;
 }

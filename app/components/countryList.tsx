@@ -21,7 +21,7 @@ export default function CountryList() {
     {
       countryName: "Netherlands",
       code: "NLD",
-      year: "2024",
+      year: "2024", 
     },
     {
       countryName: "United Kingdom",
@@ -57,9 +57,12 @@ export default function CountryList() {
   return (
     <div id="countries-list">
       {visitedCountries.map((visit, key) => (
-        <div key={key}>
-          {visit.countryName}
-          <Flag code={visit.code} height={10} />
+        <div key={key} style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center' }}>
+            {visit.countryName}
+            <Flag code={visit.code} height={10} />
+          </div>
+          {visit.year}
         </div>
       ))}
     </div>
