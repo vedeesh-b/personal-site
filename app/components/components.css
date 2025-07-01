@@ -13,7 +13,7 @@
 }
 
 .card-container {
-  width: 33%;
+  width: 100%;
   display: flex;
   flex-direction: row;
   align-items: flex-start;
@@ -56,7 +56,7 @@ a {
 }
 
 #countries-list {
-  width: 40%;
+  width: 33%;
 }
 
 #countries-list > div {

@@ -62,7 +62,7 @@ const GlobeComponent = () => {
     <div
       id="globe-container"
       style={{
-        width: 500,
+        width: 430,
         height: 500,
         clipPath: "circle(50% at 50% 50%)",
         WebkitClipPath: "circle(50% at 50% 50%)",
