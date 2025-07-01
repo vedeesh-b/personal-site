@@ -6,7 +6,10 @@ export type CardProps = {
     key?: string | null;
     title?: string | null;
     text: string | ReactNode;
-    btn?: ReactNode | null;
+    btn?: {
+      text: string;
+      href: string;
+    };
   };
   src: string;
   alt: string;
@@ -19,7 +22,7 @@ export default function Card({ layout, src, alt }: CardProps) {
         {layout.key && <div className="caption">[ {layout.key} ]</div>}
         {layout.title && <div className="title">{layout.title}</div>}
         {layout.text && <div>{layout.text}</div>}
-        {layout.btn && <div>{layout.btn}</div>}
+        {layout.btn?.text && <button>{layout.btn.text}</button>}
       </div>
       <img src={src} alt={alt} height="200px" />
     </div>
