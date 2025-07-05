@@ -16,7 +16,8 @@ body {
   box-sizing: border-box;
 }
 
-button {
+button,
+.nav-btn {
   color: #fff;
   font-weight: 500;
   background-color: #2e2f38;
