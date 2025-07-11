@@ -20,8 +20,10 @@ export default function Card({ layout, src, alt }: CardProps) {
     <div className="card-container">
       <div className="layout-container">
         {layout.key && <div className="caption">[ {layout.key} ]</div>}
-        {layout.title && <div className="title">{layout.title}</div>}
-        {layout.text && <div>{layout.text}</div>}
+        <div>
+          {layout.title && <div className="title">{layout.title}</div>}
+          {layout.text && <div>{layout.text}</div>}
+        </div>
         {layout.btn?.text && <button>{layout.btn.text}</button>}
       </div>
       <img src={src} alt={alt} height="200px" />
