@@ -13,7 +13,7 @@ export default function Projects() {
           <div
             style={{ display: "flex", flexDirection: "column", gap: "2rem" }}
           >
-            <CurrentProject />
+            {/* <CurrentProject /> */}
             {projectCards.map((project, key) => (
               <Card {...project} key={key} />
             ))}
@@ -32,7 +32,7 @@ const projectCards = [
       text: "Process behind building synapseVR",
       btn: {
         text: "More info",
-        href: "",
+        href: "/projects/synapse-vr",
       },
     },
     src: "",
@@ -44,7 +44,7 @@ const projectCards = [
       text: "Process behind building F1 tire strategy dataviz",
       btn: {
         text: "More info",
-        href: "",
+        href: "/projects/f1-datavis",
       },
     },
     src: "",
@@ -56,7 +56,7 @@ const projectCards = [
       text: "Process behind building AAC Dashboard",
       btn: {
         text: "More info",
-        href: "",
+        href: "/projects/aac",
       },
     },
     src: "",

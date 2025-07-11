@@ -9,7 +9,7 @@ export default function Landing() {
       <div id="landing-section">
         <Header />
         <About />
-        <CurrentProject />
+        {/* <CurrentProject /> */}
       </div>
     </>
   );
