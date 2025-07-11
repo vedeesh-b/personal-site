@@ -1,3 +1,4 @@
+import { layout } from "@react-router/dev/routes";
 import Card from "~/components/card";
 import Footer from "~/components/footer";
 import Navbar from "~/components/navbar";
@@ -28,6 +29,7 @@ export default function Projects() {
 const projectCards = [
   {
     layout: {
+      key: "01",
       title: "synapseVR",
       text: "Process behind building synapseVR",
       btn: {
@@ -35,23 +37,25 @@ const projectCards = [
         href: "/projects/synapse-vr",
       },
     },
-    src: "",
+    src: undefined,
     alt: "",
   },
   {
     layout: {
+      key: "02",
       title: "F1 TireStrat",
       text: "Process behind building F1 tire strategy dataviz",
       btn: {
         text: "More info",
-        href: "/projects/f1-datavis",
+        href: "/projects/f1-tirestrats",
       },
     },
-    src: "",
+    src: undefined,
     alt: "",
   },
   {
     layout: {
+      key: "03",
       title: "AAC Dashboard",
       text: "Process behind building AAC Dashboard",
       btn: {
@@ -59,7 +63,7 @@ const projectCards = [
         href: "/projects/aac",
       },
     },
-    src: "",
+    src: undefined,
     alt: "",
   },
 ];
