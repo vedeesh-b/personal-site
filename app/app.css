@@ -70,8 +70,20 @@ h1 {
   max-width: 31ch;
 }
 
+h2 {
+  font-weight: 600;
+  font-size: 26px;
+  line-height: 32px;
+  letter-spacing: -0.39px;
+  margin-bottom: 40px;
+}
+
 i {
   font-size: 26px;
+}
+
+img.splash-img {
+  margin-bottom: 28px;
 }
 
 #header {
@@ -134,6 +146,11 @@ i {
 
 .page-container {
   padding: 3rem 20rem;
+}
+
+h1.project-title {
+  margin-bottom: 40px;
+  text-align: left;
 }
 
 .about-card {

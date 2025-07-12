@@ -12,6 +12,43 @@
   font-weight: 500;
 }
 
+.icon-container {
+  border-radius: 6px;
+  padding: 6px;
+  width: fit-content;
+  margin-bottom: 12px;
+}
+
+.card-title {
+  text-transform: uppercase;
+  font-weight: 500;
+  letter-spacing: -0.45px;
+  margin-bottom: 4px;
+  color: #000;
+}
+
+.card-desc {
+  color: #2e2f38;
+  width: 75%;
+}
+
+.card-element {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  border: 0.33px solid #ffd899;
+  border-radius: 12px;
+  width: 270px;
+  padding: 16px;
+}
+
+.card-group-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: 80px;
+}
+
 .card-container {
   width: 100%;
   display: flex;
