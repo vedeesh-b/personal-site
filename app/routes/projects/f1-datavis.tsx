@@ -2,6 +2,8 @@ import Navbar from "~/components/navbar";
 import Footer from "~/components/footer";
 import F1Splash from "../../assets/f1_splash.png";
 import CardGroup from "~/components/cardGroup";
+import F1Architecture from "../../assets/f1_architecture.png";
+import F1Demo from "../../assets/f1-demo.gif";
 
 import tech_stack from "../../assets/icon_stack.png";
 import timeline from "../../assets/icon_timeline.png";
@@ -43,6 +45,49 @@ export default function F1Datavis() {
           />
           <CardGroup data={cardGroupData} />
           <h2>The Problem</h2>
+          <p>
+            In Formula 1, tire strategy is one of the most critical yet least
+            visible aspects of race performance. Choosing the right compound,
+            pit window, and response to changing track conditions can make or
+            break a team’s result. With factors like weather, track degradation,
+            and safety cars all influencing decisions in real time, strategy
+            calls are made under intense pressure and uncertainty.{" "}
+          </p>
+          <p>
+            F1 teams rely on millions of data points each lap to assist them in
+            this process. But to outsiders who don’t have access to this
+            information, tire strategies can seem a bit like a black box. To fix
+            this, I tried breaking down the problem into the following question:
+          </p>
+          <div className="quote">
+            How do tire strategies differ between drivers over the course of a
+            race? Can historical data from a specific circuit inform future
+            strategy planning?
+          </div>
+          <h2>Design & Technical Decisions</h2>
+          <img
+            src={F1Architecture}
+            alt="F1 app architecture diagram"
+            width="100%"
+          />
+          <p>
+            Data architecture: Chose to locally store a CSV file over Fast F1
+            API calls to maximise rendering speeds and eliminate reliance on
+            third-party infrastructure.
+          </p>
+          <p>
+            UI choices: Stacked bar charts effectively visualised the
+            part-to-whole relationship between tire stints across an entire
+            race.
+          </p>
+          <p>
+            UX logic: F1 races follow a temporal-first mental model, where races
+            are listed as ‘2024 Spanish Grand Prix’ rather than the other way
+            round. This influenced filter placement to enhance usability
+            clarity.
+          </p>
+          <h2>Final Output</h2>
+          <img src={F1Demo} alt="F1 app demo video" width="100%" />
         </div>
       </div>
       <Footer />
