@@ -4,6 +4,7 @@ import F1Splash from "../../assets/f1_splash.png";
 import CardGroup from "~/components/cardGroup";
 import F1Architecture from "../../assets/f1_architecture.png";
 import F1Demo from "../../assets/f1-demo.gif";
+import F1Components from "../../assets/f1-components.png";
 
 import tech_stack from "../../assets/icon_stack.png";
 import timeline from "../../assets/icon_timeline.png";
@@ -88,6 +89,8 @@ export default function F1Datavis() {
           </p>
           <h2>Final Output</h2>
           <img src={F1Demo} alt="F1 app demo video" width="100%" />
+          <img src={F1Components} alt="F1 app component library" width="100%" />
+          <h2>Takeaways & Future Improvements</h2>
         </div>
       </div>
       <Footer />
