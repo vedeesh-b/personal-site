@@ -88,9 +88,45 @@ export default function F1Datavis() {
             clarity.
           </p>
           <h2>Final Output</h2>
+          <p>
+            The result is a fully interactive dashboard that empowers users to
+            explore how F1 tire strategies unfold across seasons and circuits.
+            Users can filter by year and Grand Prix to load a stacked bar graph
+            visualizing each driver’s stint strategy, complete with weather
+            conditions, and circuit metadata.
+          </p>
           <img src={F1Demo} alt="F1 app demo video" width="100%" />
+          <p>
+            Each component in the interface was purpose-built to deliver
+            information with clarity, precision, and visual hierarchy. Data from
+            the CSV backend was normalized and parsed into structured formats
+            that allowed each UI element to dynamically reflect race-specific
+            context. Key areas of focus for me were microinteractions,
+            responsive behavior, and visualisation suitability.
+          </p>
           <img src={F1Components} alt="F1 app component library" width="100%" />
           <h2>Takeaways & Future Improvements</h2>
+          <p>
+            This project brought together my interests in motorsport, data
+            storytelling, and interaction design to solve a niche but meaningful
+            problem: making tire strategy in F1 more understandable and
+            explorable. By visualizing tire stints across circuits and seasons,
+            this dashboard:
+            <ul>
+              <li>
+                Demystifies race strategy for casual fans who often miss the
+                nuance behind pit stops and compound choices.
+              </li>
+              <li>
+                Supports pattern recognition by allowing users to compare how
+                strategies evolve track-to-track and year-over-year.
+              </li>
+              <li>
+                Builds a foundation for predictive analysis, where historical
+                behavior could inform likely strategies for upcoming races.
+              </li>
+            </ul>
+          </p>
         </div>
       </div>
       <Footer />
