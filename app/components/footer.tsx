@@ -9,19 +9,15 @@ export default function Footer() {
   const socialLinks: SocialLinkType = [
     {
       label: "Email",
-      href: "",
+      href: "mailto:vedeesh18@gmail.com",
     },
     {
       label: "LinkedIn",
-      href: "",
+      href: "https://www.linkedin.com/in/vedeesh-bali/",
     },
     {
       label: "Dribbble",
-      href: "",
-    },
-    {
-      label: "Medium",
-      href: "",
+      href: "https://dribbble.com/vedeeshb",
     },
   ];
 
@@ -30,7 +26,7 @@ export default function Footer() {
       <div>© VEDEESH BALI, 2025</div>
       <div id="links">
         {socialLinks.map((social, key) => (
-          <a href={social.href} key={key}>
+          <a href={social.href} key={key} target="_blank">
             {social.label}
           </a>
         ))}

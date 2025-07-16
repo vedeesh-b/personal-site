@@ -70,22 +70,23 @@ export default function F1Datavis() {
             src={F1Architecture}
             alt="F1 app architecture diagram"
             width="100%"
+            style={{ margin: "1em 0" }}
           />
           <p>
-            Data architecture: Chose to locally store a CSV file over Fast F1
-            API calls to maximise rendering speeds and eliminate reliance on
-            third-party infrastructure.
+            <span className="head">Data architecture: </span>Chose to locally
+            store a CSV file over Fast F1 API calls to maximise rendering speeds
+            and eliminate reliance on third-party infrastructure.
           </p>
           <p>
-            UI choices: Stacked bar charts effectively visualised the
-            part-to-whole relationship between tire stints across an entire
-            race.
+            <span className="head">UI choices: </span>Stacked bar charts
+            effectively visualised the part-to-whole relationship between tire
+            stints across an entire race.
           </p>
           <p>
-            UX logic: F1 races follow a temporal-first mental model, where races
-            are listed as ‘2024 Spanish Grand Prix’ rather than the other way
-            round. This influenced filter placement to enhance usability
-            clarity.
+            <span className="head">UX logic: </span>F1 races follow a
+            temporal-first mental model, where races are listed as ‘2024 Spanish
+            Grand Prix’ rather than the other way round. This influenced filter
+            placement to enhance usability clarity.
           </p>
           <h2>Final Output</h2>
           <p>
@@ -95,7 +96,12 @@ export default function F1Datavis() {
             visualizing each driver’s stint strategy, complete with weather
             conditions, and circuit metadata.
           </p>
-          <img src={F1Demo} alt="F1 app demo video" width="100%" />
+          <img
+            src={F1Demo}
+            alt="F1 app demo video"
+            width="100%"
+            style={{ margin: "1em 0" }}
+          />
           <p>
             Each component in the interface was purpose-built to deliver
             information with clarity, precision, and visual hierarchy. Data from
@@ -104,7 +110,12 @@ export default function F1Datavis() {
             context. Key areas of focus for me were microinteractions,
             responsive behavior, and visualisation suitability.
           </p>
-          <img src={F1Components} alt="F1 app component library" width="100%" />
+          <img
+            src={F1Components}
+            alt="F1 app component library"
+            width="100%"
+            style={{ margin: "2em 0" }}
+          />
           <h2>Takeaways & Future Improvements</h2>
           <p>
             This project brought together my interests in motorsport, data
@@ -112,21 +123,21 @@ export default function F1Datavis() {
             problem: making tire strategy in F1 more understandable and
             explorable. By visualizing tire stints across circuits and seasons,
             this dashboard:
-            <ul>
-              <li>
-                Demystifies race strategy for casual fans who often miss the
-                nuance behind pit stops and compound choices.
-              </li>
-              <li>
-                Supports pattern recognition by allowing users to compare how
-                strategies evolve track-to-track and year-over-year.
-              </li>
-              <li>
-                Builds a foundation for predictive analysis, where historical
-                behavior could inform likely strategies for upcoming races.
-              </li>
-            </ul>
           </p>
+          <ul>
+            <li>
+              Demystifies race strategy for casual fans who often miss the
+              nuance behind pit stops and compound choices.
+            </li>
+            <li>
+              Supports pattern recognition by allowing users to compare how
+              strategies evolve track-to-track and year-over-year.
+            </li>
+            <li>
+              Builds a foundation for predictive analysis, where historical
+              behavior could inform likely strategies for upcoming races.
+            </li>
+          </ul>
         </div>
       </div>
       <Footer />
