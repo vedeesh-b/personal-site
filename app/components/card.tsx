@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import "./components.css";
 
 export type CardProps = {
@@ -30,7 +29,7 @@ export default function Card({ layout, src, alt }: CardProps) {
           </a>
         )}
       </div>
-      <img src={src} alt={alt} height="200px" />
+      <img src={src} alt={alt} width="355px" height="200px" />
     </div>
   );
 }

@@ -72,10 +72,18 @@ export default function About() {
             </div>
           </div>
           <div className="about-card">
-            <div>
-              {infoCards.photography.layout.text.map((p, i) => (
-                <p key={i}>{p}</p>
-              ))}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+              }}
+            >
+              <div>
+                {infoCards.photography.layout.text.map((p, i) => (
+                  <p key={i}>{p}</p>
+                ))}
+              </div>
               <button>{infoCards.photography.layout.btn.text}</button>
             </div>
             <div>

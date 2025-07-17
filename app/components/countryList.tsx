@@ -1,5 +1,14 @@
-import Flag from "react-world-flags";
 import "./components.css";
+import JapanFlag from "../assets/flags/jpn.svg?react";
+import SpainFlag from "../assets/flags/esp.svg?react";
+import CzechiaFlag from "../assets/flags/cze.svg?react";
+import NetherlandsFlag from "../assets/flags/nld.svg?react";
+import UKFlag from "../assets/flags/gb.svg?react";
+import HongKongFlag from "../assets/flags/hk.svg?react";
+import IndonesiaFlag from "../assets/flags/id.svg?react";
+import SeychellesFlag from "../assets/flags/sey.svg?react";
+import MaldivesFlag from "../assets/flags/mal.svg?react";
+import SingaporeFlag from "../assets/flags/sin.svg?react";
 
 export const CountryList = () => {
   return (
@@ -22,7 +31,7 @@ export const CountryList = () => {
             }}
           >
             {visit.countryName}
-            {/* <Flag code={visit.code} height={10} /> */}
+            {visit.flag}
           </div>
           {visit.year}
         </div>
@@ -34,52 +43,52 @@ export const CountryList = () => {
 const visitedCountries = [
   {
     countryName: "Japan",
-    code: "JPN",
+    flag: <JapanFlag height={10} />,
     year: "2025",
   },
   {
     countryName: "Spain",
-    code: "ESP",
+    flag: <SpainFlag height={10} />,
     year: "2024",
   },
   {
     countryName: "Czechia",
-    code: "CZE",
+    flag: <CzechiaFlag height={10} />,
     year: "2024",
   },
   {
     countryName: "Netherlands",
-    code: "NLD",
+    flag: <NetherlandsFlag height={10} />,
     year: "2024",
   },
   {
     countryName: "United Kingdom",
-    code: "GBR",
+    flag: <UKFlag height={10} />,
     year: "2018, 19",
   },
   {
     countryName: "Hong Kong",
-    code: "HKG",
+    flag: <HongKongFlag height={10} />,
     year: "2017",
   },
   {
     countryName: "Indonesia",
-    code: "IDN",
+    flag: <IndonesiaFlag height={10} />,
     year: "2016",
   },
   {
     countryName: "Seychelles",
-    code: "SYC",
+    flag: <SeychellesFlag height={10} />,
     year: "2012, 13",
   },
   {
     countryName: "Maldives",
-    code: "MDV",
+    flag: <MaldivesFlag height={10} />,
     year: "2011",
   },
   {
     countryName: "Singapore",
-    code: "SGP",
+    flag: <SingaporeFlag height={10} />,
     year: "2010",
   },
 ];

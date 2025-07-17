@@ -1,8 +1,10 @@
-import { layout } from "@react-router/dev/routes";
-import Card from "~/components/card";
+import Card, { type CardProps } from "~/components/card";
 import Footer from "~/components/footer";
 import Navbar from "~/components/navbar";
 import CurrentProject from "~/sections/currentProject";
+import SynapseSplash from "../../assets/SynapseSplash.png";
+import F1Splash from "../../assets/f1_splash.png";
+import AAC_Splash from "../../assets/AAC Splash.png";
 
 export default function Projects() {
   return (
@@ -26,7 +28,7 @@ export default function Projects() {
   );
 }
 
-const projectCards = [
+const projectCards: CardProps[] = [
   {
     layout: {
       key: "01",
@@ -37,7 +39,7 @@ const projectCards = [
         href: "/projects/synapse-vr",
       },
     },
-    src: undefined,
+    src: SynapseSplash,
     alt: "",
   },
   {
@@ -50,7 +52,7 @@ const projectCards = [
         href: "/projects/f1-tirestrats",
       },
     },
-    src: undefined,
+    src: F1Splash,
     alt: "",
   },
   {
@@ -63,7 +65,7 @@ const projectCards = [
         href: "/projects/aac",
       },
     },
-    src: undefined,
+    src: AAC_Splash,
     alt: "",
   },
 ];
