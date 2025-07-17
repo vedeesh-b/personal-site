@@ -76,6 +76,11 @@ h2 {
   line-height: 32px;
   letter-spacing: -0.39px;
   margin-bottom: 40px;
+  margin-top: 40px;
+}
+
+p {
+  color: #2e2f38;
 }
 
 i {

@@ -52,6 +52,11 @@
   padding: 16px;
 }
 
+span.head {
+  font-weight: 600;
+  color: #000;
+}
+
 .card-group-container {
   display: flex;
   flex-direction: row;
@@ -96,6 +101,10 @@
 #links {
   display: flex;
   justify-content: space-between;
+}
+
+#links > a {
+  text-decoration: underline;
 }
 
 a {
