@@ -151,6 +151,8 @@ img.splash-img {
 h1.project-title {
   margin-bottom: 40px;
   text-align: left;
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
 }
 
 .about-card {
