@@ -1,10 +1,11 @@
+import CategoryPill from "./categoryPill";
 import "./components.css";
 
 export type CardProps = {
   layout: {
     key?: string | null;
     title?: string | null;
-    text: string;
+    text: string[];
     btn?: {
       text: string;
       href: string;
@@ -21,7 +22,8 @@ export default function Card({ layout, src, alt }: CardProps) {
         {layout.key && <div className="caption">[ {layout.key} ]</div>}
         <div>
           {layout.title && <div className="title">{layout.title}</div>}
-          {layout.text && <div>{layout.text}</div>}
+          {layout.text &&
+            layout.text.map((text) => <CategoryPill label={text} key={text} />)}
         </div>
         {layout.btn?.text && (
           <a role="button" href={layout.btn.href} className="nav-btn">

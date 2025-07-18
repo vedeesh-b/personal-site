@@ -33,7 +33,7 @@ const projectCards: CardProps[] = [
     layout: {
       key: "01",
       title: "synapseVR",
-      text: "Process behind building synapseVR",
+      text: ["UI Design", "E-learning"],
       btn: {
         text: "More info",
         href: "/projects/synapse-vr",
@@ -46,26 +46,26 @@ const projectCards: CardProps[] = [
     layout: {
       key: "02",
       title: "F1 TireStrat",
-      text: "Process behind building F1 tire strategy dataviz",
+      text: ["Python, JavaScript", "Sports analytics"],
       btn: {
         text: "More info",
         href: "/projects/f1-tirestrats",
       },
     },
     src: F1Splash,
-    alt: "",
+    alt: "Splash image for F1 tirestrats project",
   },
   {
     layout: {
       key: "03",
       title: "AAC Dashboard",
-      text: "Process behind building AAC Dashboard",
+      text: ["React", "Data visualisation"],
       btn: {
         text: "More info",
         href: "/projects/aac",
       },
     },
     src: AAC_Splash,
-    alt: "",
+    alt: "Splash image for AAC dashboard",
   },
 ];

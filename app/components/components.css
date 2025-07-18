@@ -88,6 +88,16 @@ span.head {
   margin-bottom: 8px;
 }
 
+.pill-container {
+  padding: 6px 10px;
+  border: 0.33px solid;
+  font-size: 11px;
+  text-transform: uppercase;
+  border-radius: 20px;
+  width: fit-content;
+  margin-bottom: 8px;
+}
+
 #footer-container {
   background-color: #fff;
   display: flex;

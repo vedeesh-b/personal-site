@@ -84,7 +84,11 @@ export default function About() {
                   <p key={i}>{p}</p>
                 ))}
               </div>
-              <button>{infoCards.photography.layout.btn.text}</button>
+              <a role="button" href="https://photos.vedeeshbali.com">
+                <button style={{ backgroundColor: "#2e2f38", color: "#fff" }}>
+                  {infoCards.photography.layout.btn.text}
+                </button>
+              </a>
             </div>
             <div>
               <img
@@ -94,6 +98,7 @@ export default function About() {
               />
             </div>
           </div>
+          <h2 style={{ marginBottom: 0 }}>Travel</h2>
           <div
             style={{
               display: "flex",
