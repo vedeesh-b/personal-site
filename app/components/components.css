@@ -70,6 +70,7 @@ span.head {
   flex-direction: row;
   align-items: flex-start;
   justify-content: space-between;
+  margin-bottom: 2rem;
 }
 
 .layout-container {

@@ -2,6 +2,8 @@ import Footer from "~/components/footer";
 import Navbar from "~/components/navbar";
 
 import durdle_door from "../assets/durdle_door.webp";
+import ferrari from "../assets/ferrari.jpeg";
+import camera from "../assets/camera.jpeg";
 import GlobeComponent from "~/components/globe";
 import { CountryList } from "~/components/countryList";
 
@@ -66,8 +68,8 @@ export default function About() {
             <div>
               <img
                 width="230px"
-                src={infoCards.intro.src}
-                alt={infoCards.intro.alt}
+                src={infoCards.sport.src}
+                alt={infoCards.sport.alt}
               />
             </div>
           </div>
@@ -84,7 +86,11 @@ export default function About() {
                   <p key={i}>{p}</p>
                 ))}
               </div>
-              <a role="button" href="https://photos.vedeeshbali.com">
+              <a
+                role="button"
+                href={infoCards.photography.layout.btn.href}
+                target="_blank"
+              >
                 <button style={{ backgroundColor: "#2e2f38", color: "#fff" }}>
                   {infoCards.photography.layout.btn.text}
                 </button>
@@ -93,12 +99,11 @@ export default function About() {
             <div>
               <img
                 width="230px"
-                src={infoCards.intro.src}
-                alt={infoCards.intro.alt}
+                src={infoCards.photography.src}
+                alt={infoCards.photography.alt}
               />
             </div>
           </div>
-          <h2 style={{ marginBottom: 0 }}>Travel</h2>
           <div
             style={{
               display: "flex",
@@ -138,8 +143,8 @@ const infoCards = {
         "I also enjoy rollerblading, pool, and darts.",
       ],
     },
-    src: "",
-    alt: "",
+    src: ferrari,
+    alt: "Vedeesh Bali at Suzuka Circuit watching the Japanese Grand Prix",
   },
   photography: {
     layout: {
@@ -152,7 +157,7 @@ const infoCards = {
         href: "https://photos.vedeeshbali.com/",
       },
     },
-    src: "",
-    alt: "",
+    src: camera,
+    alt: "Photography at Durdle Door, England.",
   },
 };

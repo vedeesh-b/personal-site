@@ -1,7 +1,6 @@
 import Card, { type CardProps } from "~/components/card";
 import Footer from "~/components/footer";
 import Navbar from "~/components/navbar";
-import CurrentProject from "~/sections/currentProject";
 import SynapseSplash from "../../assets/SynapseSplash.png";
 import F1Splash from "../../assets/f1_splash.png";
 import AAC_Splash from "../../assets/AAC Splash.png";
@@ -16,7 +15,6 @@ export default function Projects() {
           <div
             style={{ display: "flex", flexDirection: "column", gap: "2rem" }}
           >
-            {/* <CurrentProject /> */}
             {projectCards.map((project, key) => (
               <Card {...project} key={key} />
             ))}
