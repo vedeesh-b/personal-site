@@ -1,4 +1,5 @@
 import "./components.css";
+import Logo from "../assets/logo.png";
 
 export default function Navbar() {
   const navbarLinks = [
@@ -14,7 +15,9 @@ export default function Navbar() {
   return (
     <div id="navbar-container">
       <div id="headshot-img">
-        <a href="/">Logo</a>
+        <a href="/">
+          <img src={Logo} alt="Homepage link" height="24px" />
+        </a>
       </div>
       <div id="links">
         {navbarLinks.map((link, key) => (
