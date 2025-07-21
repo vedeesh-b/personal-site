@@ -37,6 +37,12 @@
   padding: 3rem 0;
 }
 
+.projects-flex {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
 .card-desc {
   color: #2e2f38;
   width: 75%;
@@ -129,4 +135,19 @@ a {
 
 #countries-list > div {
   margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  #navbar-container {
+    padding: 1.5rem 2rem;
+  }
+
+  #footer-container.caption {
+    padding: 1.5rem 2rem;
+  }
+
+  .card-container {
+    flex-direction: column-reverse;
+    gap: 1rem;
+  }
 }

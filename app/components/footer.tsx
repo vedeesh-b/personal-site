@@ -24,7 +24,7 @@ export default function Footer() {
   return (
     <div className="caption" id="footer-container">
       <div>© VEDEESH BALI, 2025</div>
-      <div id="links">
+      <div id="links footer">
         {socialLinks.map((social, key) => (
           <a href={social.href} key={key} target="_blank">
             {social.label}

@@ -34,8 +34,8 @@ export default function About() {
               />
             </div>
           </div>
-          <div style={{ margin: "7rem 0" }}>
-            <h1 style={{ maxWidth: "100%", padding: "0 11rem" }}>
+          <div className="quote-container">
+            <h1>
               Great products need{" "}
               <span
                 style={{
@@ -104,15 +104,7 @@ export default function About() {
               />
             </div>
           </div>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              width: "100%",
-            }}
-          >
+          <div className="globe-container">
             <CountryList />
             <GlobeComponent />
           </div>

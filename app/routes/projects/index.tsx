@@ -12,9 +12,7 @@ export default function Projects() {
       <div id="layout-container">
         <div className="page-container">
           <h1 style={{ textAlign: "left" }}>Projects</h1>
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "2rem" }}
-          >
+          <div className="projects-flex">
             {projectCards.map((project, key) => (
               <Card {...project} key={key} />
             ))}
