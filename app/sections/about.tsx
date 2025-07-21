@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import headshot from "../assets/headshot.webp";
+import { useViewport } from "~/context/ViewportContext";
 
 export default function About() {
   const now = new Date(
@@ -12,6 +13,8 @@ export default function About() {
     setDate(newDate);
   }
 
+  const device = useViewport();
+
   useEffect(() => {
     const interval = setInterval(() => {
       updateDate();
@@ -22,7 +25,11 @@ export default function About() {
 
   return (
     <div id="about">
-      <div className="caption uppercase">vedeesh18@gmail.com</div>
+      {device.isMobileOrTablet ? (
+        ""
+      ) : (
+        <div className="caption uppercase">vedeesh18@gmail.com</div>
+      )}
       <div id="headshot">
         <img
           src={headshot}
@@ -35,11 +42,15 @@ export default function About() {
         />
         <div className="caption lowercase">That's me in Amsterdam!</div>
       </div>
-      <div className="caption uppercase" id="location">
-        <div>London, United Kingdom</div>
-        <div id="date">{date.toDateString()}</div>
-        <div id="time">{date.toLocaleTimeString()}</div>
-      </div>
+      {device.isMobileOrTablet ? (
+        ""
+      ) : (
+        <div className="caption uppercase" id="location">
+          <div>London, United Kingdom</div>
+          <div id="date">{date.toDateString()}</div>
+          <div id="time">{date.toLocaleTimeString()}</div>
+        </div>
+      )}
     </div>
   );
 }

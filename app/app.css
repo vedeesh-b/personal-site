@@ -253,4 +253,8 @@ h1.project-title {
     cursor: grabbing;
     clip-path: circle(50% at 50% 50%);
   }
+
+  #headshot {
+    width: 100%;
+  }
 }

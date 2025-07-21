@@ -150,4 +150,12 @@ a {
     flex-direction: column-reverse;
     gap: 1rem;
   }
+
+  #links {
+    gap: 0.8rem;
+  }
+
+  #countries-list {
+    width: 100%;
+  }
 }

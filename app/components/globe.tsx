@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useViewport } from "~/context/ViewportContext";
 
 type CountryType = {
   properties: {
@@ -10,6 +11,8 @@ const GlobeComponent = () => {
   const [Globe, setGlobe] = useState<any>(null);
   const [countries, setCountries] = useState({ features: [] });
   const globeRef = useRef<ReturnType<typeof Globe> | null>(null);
+
+  const device = useViewport();
 
   const visitedCountries = [
     "Japan",
@@ -62,8 +65,8 @@ const GlobeComponent = () => {
     <div
       id="globe-container"
       style={{
-        width: 430,
-        height: 500,
+        width: device.isMobileOrTablet ? 350 : 500,
+        height: device.isMobileOrTablet ? 350 : 500,
         clipPath: "circle(50% at 50% 50%)",
         WebkitClipPath: "circle(50% at 50% 50%)",
         overflow: "hidden",
@@ -81,8 +84,8 @@ const GlobeComponent = () => {
         hexPolygonColor={(d: CountryType) =>
           setHexPolygonColor(d.properties.ADMIN)
         }
-        width={500}
-        height={500}
+        width={device.isMobileOrTablet ? 350 : 500}
+        height={device.isMobileOrTablet ? 350 : 500}
       />
     </div>
   );
