@@ -28,6 +28,7 @@ export default function Footer() {
   ];
 
   const device = useViewport();
+  console.log(device);
 
   return (
     <div className="caption" id="footer-container">

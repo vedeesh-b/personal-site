@@ -228,8 +228,13 @@ h1.project-title {
     flex-direction: column;
   }
 
+  .about-card:has(p),
   .about-card > div > p {
     width: 100%;
+  }
+
+  .about-card {
+    gap: 1rem;
   }
 
   .quote-container > h1 {
