@@ -3,19 +3,17 @@ import headshot from "../assets/headshot.webp";
 import { useViewport } from "~/context/ViewportContext";
 
 export default function About() {
-  const now = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Europe/London" })
-  );
-  const [date, setDate] = useState<Date>(now);
-
-  function updateDate() {
-    let newDate = new Date();
-    setDate(newDate);
-  }
-
+  const [date, setDate] = useState<Date | null>(null);
   const device = useViewport();
 
   useEffect(() => {
+    const updateDate = () => {
+      let newDate = new Date(
+        new Date().toLocaleString("en-US", { timeZone: "Europe/London" })
+      );
+      setDate(newDate);
+    };
+
     const interval = setInterval(() => {
       updateDate();
     }, 1000);
@@ -25,9 +23,7 @@ export default function About() {
 
   return (
     <div id="about">
-      {device.isMobileOrTablet ? (
-        ""
-      ) : (
+      {!device.isMobileOrTablet && (
         <div className="caption uppercase">vedeesh18@gmail.com</div>
       )}
       <div id="headshot">
@@ -42,9 +38,7 @@ export default function About() {
         />
         <div className="caption lowercase">That's me in Amsterdam!</div>
       </div>
-      {device.isMobileOrTablet ? (
-        ""
-      ) : (
+      {!device.isMobileOrTablet && date && (
         <div className="caption uppercase" id="location">
           <div>London, United Kingdom</div>
           <div id="date">{date.toDateString()}</div>

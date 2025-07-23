@@ -70,7 +70,6 @@ const GlobeComponent = () => {
         clipPath: "circle(50% at 50% 50%)",
         WebkitClipPath: "circle(50% at 50% 50%)",
         overflow: "hidden",
-        cursor: "grab",
       }}
     >
       <Globe

@@ -3,7 +3,6 @@ import type { Route } from "./+types/home";
 import "../app.css";
 import Landing from "../pages/landing";
 import Footer from "~/components/footer";
-import { ViewportProvider } from "~/context/ViewportContext";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -18,12 +17,14 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Home() {
   return (
-    <ViewportProvider>
+    <>
       <Navbar />
       <div id="layout-container">
-        <Landing />
+        <div className="page-container">
+          <Landing />
+        </div>
       </div>
       <Footer />
-    </ViewportProvider>
+    </>
   );
 }

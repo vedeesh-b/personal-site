@@ -184,14 +184,12 @@ h1.project-title {
 #globe-container canvas {
   height: 370px;
   width: 370px;
-  cursor: grab;
   clip-path: circle(50% at 50% 50%);
 }
 
 #globe-container:active canvas {
   height: 370px;
   width: 370px;
-  cursor: grabbing;
   clip-path: circle(50% at 50% 50%);
 }
 
@@ -201,6 +199,7 @@ h1.project-title {
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  z-index: 10;
 }
 
 .quote-container {
@@ -248,18 +247,22 @@ h1.project-title {
   #globe-container canvas {
     height: 320px;
     width: 320px;
-    cursor: grab;
     clip-path: circle(50% at 50% 50%);
   }
 
   #globe-container:active canvas {
     height: 320px;
     width: 320px;
-    cursor: grabbing;
     clip-path: circle(50% at 50% 50%);
   }
 
   #headshot {
     width: 100%;
+  }
+}
+
+@media (min-width: 1824px) {
+  .page-container {
+    padding: 3rem 33%;
   }
 }

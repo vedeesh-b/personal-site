@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import "./components.css";
 import { useViewport } from "~/context/ViewportContext";
 
@@ -9,6 +9,15 @@ type SocialLinkType = {
 }[];
 
 export default function Footer() {
+  const device = useViewport();
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  if (!hasMounted) return null;
+
   const socialLinks: SocialLinkType = [
     {
       label: "Email",
@@ -26,9 +35,6 @@ export default function Footer() {
       icon: "lab la-dribbble",
     },
   ];
-
-  const device = useViewport();
-  console.log(device);
 
   return (
     <div className="caption" id="footer-container">
