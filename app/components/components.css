@@ -135,6 +135,16 @@ a {
 
 #countries-list > div {
   margin-bottom: 16px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+#countries-list > div > div {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
 }
 
 @media (max-width: 768px) {
@@ -157,5 +167,15 @@ a {
 
   #countries-list {
     width: 100%;
+  }
+}
+
+@media (min-width: 1824px) {
+  #navbar-container {
+    padding: 1.6rem 33%;
+  }
+
+  #footer-container {
+    padding: 1.6rem 33%;
   }
 }
