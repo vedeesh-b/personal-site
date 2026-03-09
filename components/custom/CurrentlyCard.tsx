@@ -1,19 +1,31 @@
 import { truncateText } from "@/lib/utils";
+import Image, { StaticImageData } from "next/image";
+
+import bookImg from "@/assets/body-language-book-cover.jpg";
+import gridlockImg from "@/assets/gridlock-icon.png";
 
 type CurrentItemType = {
   header: string;
   title: string;
   subtitle: string;
+  imgUrl: StaticImageData | string;
 };
 
-const CurrentItem = ({ header, title, subtitle }: CurrentItemType) => {
+const CurrentItem = ({ header, title, subtitle, imgUrl }: CurrentItemType) => {
   return (
     <div className="flex flex-col items-start border-[0.33px] rounded-sm p-2 gap-4">
       <div className="uppercase font-mono tracking-[5%] text-sm font-medium text-gray-500">
         {header}
       </div>
-      <div className="flex flex-row gap-6 h-20">
-        <div className="h-full w-20 rounded-sm border-[0.33px]" />
+      <div className="flex flex-row gap-4 h-20">
+        <div className="relative h-full w-20 rounded-sm border-[0.33px]">
+          <Image
+            className="relative object-cover p-1 rounded-sm"
+            src={imgUrl}
+            alt={title}
+            fill
+          />
+        </div>
 
         <div className="flex flex-col items-start justify-center text-start min-w-0">
           <div className="text-[20px] font-medium truncate">
@@ -32,18 +44,22 @@ export const CurrentlyCard = () => {
   const currentItems: CurrentItemType[] = [
     {
       header: "Listening",
-      title: "Tell Me",
-      subtitle: "Karan Aujla",
+      title: "I Follow Rivers - The Magician Remix",
+      subtitle: "Lykke Li",
+      imgUrl:
+        "https://i.scdn.co/image/ab67616d000048513526a120761b8ff11389f1ec",
     },
     {
       header: "Reading",
       title: "The Definitive Book of Body Language",
       subtitle: "Allan & Barbara Pease",
+      imgUrl: bookImg,
     },
     {
       header: "Building",
       title: "GridLock",
       subtitle: "F1-themed Bingo Card App",
+      imgUrl: gridlockImg,
     },
   ];
 
@@ -57,6 +73,7 @@ export const CurrentlyCard = () => {
             header={item.header}
             title={item.title}
             subtitle={item.subtitle}
+            imgUrl={item.imgUrl}
           />
         ))}
       </div>
