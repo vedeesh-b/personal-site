@@ -64,7 +64,7 @@ export const CurrentlyCard = () => {
   ];
 
   return (
-    <div className="w-full pb-30">
+    <div className="w-full">
       <div className="w-full text-start font-medium pb-4">Currently</div>
       <div className="flex flex-col w-full border-[0.33px] rounded-md p-1 gap-1">
         {currentItems.map((item) => (

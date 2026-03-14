@@ -1,39 +1,27 @@
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+import { InfiniteMovingCards } from "../ui/infinite-moving-cards";
+import { Button } from "../ui/button";
+import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 
 export const PhotoCarousel = () => {
+  const photos = [
+    "https://kj36h7e7wv1p9gx0.public.blob.vercel-storage.com/images/cz_peacock.webp",
+    "https://kj36h7e7wv1p9gx0.public.blob.vercel-storage.com/images/gb_kn_duck.webp",
+    "https://kj36h7e7wv1p9gx0.public.blob.vercel-storage.com/images/jpn_osaka_castle.webp",
+    "https://kj36h7e7wv1p9gx0.public.blob.vercel-storage.com/images/jpn_fuji.webp",
+    "https://kj36h7e7wv1p9gx0.public.blob.vercel-storage.com/images/mlt_mdina.webp",
+  ];
+
   return (
-    <>
+    <div className="w-full">
       <div className="w-full text-start font-medium pb-2">Photography</div>
-      <Carousel
-        opts={{
-          align: "start",
-          loop: true,
-        }}
-        className="w-full max-w-[12rem] sm:max-w-xs md:max-w-sm"
-      >
-        <CarouselContent>
-          {Array.from({ length: 5 }).map((_, index) => (
-            <CarouselItem key={index} className="basis-1/2 lg:basis-1/3">
-              <div className="p-1">
-                <Card>
-                  <CardContent className="flex aspect-square items-center justify-center p-6">
-                    <span className="text-3xl font-semibold">{index + 1}</span>
-                  </CardContent>
-                </Card>
-              </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious />
-        <CarouselNext />
-      </Carousel>
-    </>
+      <InfiniteMovingCards direction="right" speed="slow" items={photos} />
+      <Button asChild className="w-full mt-2 py-7 text-md rounded-full">
+        <Link href={"https://photos.vedeeshbali.com/"} target="_blank">
+          Check out more of my work
+          <ExternalLink />
+        </Link>
+      </Button>
+    </div>
   );
 };

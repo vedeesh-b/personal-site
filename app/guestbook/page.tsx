@@ -6,6 +6,7 @@ import noteSky from "@/assets/stickies/note-sky.png";
 import noteTeal from "@/assets/stickies/note-teal.png";
 import noteYellow from "@/assets/stickies/note-yellow.png";
 import { neon } from "@neondatabase/serverless";
+import Link from "next/link";
 
 export default async function Guestbook() {
   const noteImgs = [
@@ -28,7 +29,15 @@ export default async function Guestbook() {
         </h1>
         <p>
           Handwritten sticky notes are my favourite method of communication.
-          Inspired by @Eva Decker's guestbook on her personal website.
+          Inspired by{" "}
+          <Link
+            className="font-mono font-medium text-blue-600 underline underline-offset-[3.5px]"
+            href={"https://eva.town/"}
+            target="_blank"
+          >
+            @Eva Decker
+          </Link>
+          's guestbook on her personal website.
         </p>
       </div>
       <StickyNoteTemplate
@@ -47,7 +56,7 @@ export default async function Guestbook() {
             />
           ))
         ) : (
-          <p>No notes yet.</p>
+          <p className="text-muted-foreground">No notes yet.</p>
         )}
       </div>
     </div>
