@@ -21,14 +21,14 @@ export const StickyNote = ({
   date,
 }: StickyNoteProps) => {
   return (
-    <div className="w-80 h-80 relative">
+    <div className="w-80 h-80 relative md:w-72 md:h-72">
       <Image fill alt="green" src={imgUrl} />
       <div className="absolute w-full h-full z-10 p-6 font-mono flex flex-col justify-between">
-        <p>{message}</p>
+        <p className="line-clamp-6 md:line-clamp-none">{message}</p>
         <div className="flex flex-col gap-1">
           {social ? (
             <a href={social}>
-              <p className="text-gray-700 underline underline-offset-4 truncate">
+              <p className="text-gray-700 underline underline-offset-4 truncate md:whitespace-normal md:overflow-visible">
                 {name}
               </p>
             </a>
@@ -44,7 +44,10 @@ export const StickyNote = ({
 
 export const StickyNoteTemplate = ({ imgUrl }: { imgUrl: StaticImageData }) => {
   return (
-    <form action={addGuestbookEntry} className="w-80 h-80 relative">
+    <form
+      action={addGuestbookEntry}
+      className="w-80 h-80 relative md:w-72 md:h-72"
+    >
       <Image fill alt="sticky note" src={imgUrl} />
       <div className="absolute w-full h-full z-10 p-6 font-mono flex flex-col justify-between">
         <Textarea

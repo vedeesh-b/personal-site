@@ -1,16 +1,13 @@
 export const Footer = () => {
   return (
-    <footer className="w-full flex items-center pt-10 pb-2 border-t-[0.33px]">
-      <div className="w-full flex flex-row justify-between items-center">
-        <div className="flex flex-row">
-          <div>
-            <p className="w-45 pb-4">
-              Thanks for coming by! I'll see you around.
-            </p>
-            <p>© 2026 Vedeesh Bali</p>
-          </div>
+    <footer className="w-full flex justify-center pb-2">
+      <div className="w-full max-w-3xl flex flex-row justify-between items-center border-t-[0.33px]  pt-10">
+        <div>
+          <p className="pb-4 w-45">
+            Thanks for coming by! I'll see you around.
+          </p>
+          <p>© 2026 Vedeesh Bali</p>
         </div>
-        {/* <div className="aspect-square w-30 rounded-2xl border-[0.33px] p-2"></div> */}
       </div>
     </footer>
   );

@@ -22,42 +22,45 @@ export default async function Guestbook() {
   const entries = await sql.query("SELECT * FROM guestbook ORDER BY id DESC");
 
   return (
-    <div className="py-30 flex flex-col items-center gap-8 text-start">
-      <div>
-        <h1 className="text-2xl pb-2 font-medium w-full text-start">
-          Guestbook
-        </h1>
-        <p>
-          Handwritten sticky notes are my favourite method of communication.
-          Inspired by{" "}
-          <Link
-            className="font-mono font-medium text-blue-600 underline underline-offset-[3.5px]"
-            href={"https://eva.town/"}
-            target="_blank"
-          >
-            @Eva Decker
-          </Link>
-          's guestbook on her personal website.
-        </p>
-      </div>
-      <StickyNoteTemplate
-        imgUrl={noteImgs[Math.floor(Math.random() * noteImgs.length)]}
-      />
-      <div className="pt-12 flex flex-col gap-8">
-        {entries && entries.length > 0 ? (
-          entries.map((note) => (
-            <StickyNote
-              key={note.id}
-              imgUrl={noteImgs[Math.floor(Math.random() * noteImgs.length)]}
-              message={note.message}
-              name={note.name}
-              social={note.social}
-              date={note.created_at}
-            />
-          ))
-        ) : (
-          <p className="text-muted-foreground">No notes yet.</p>
-        )}
+    <div className="py-30 w-full flex justify-center">
+      <div className=" flex flex-col items-center gap-12 text-start max-w-3xl justify-center">
+        <div>
+          <h1 className="text-2xl pb-2 font-medium w-full text-start">
+            Guestbook
+          </h1>
+          <p>
+            Handwritten sticky notes are my favourite method of communication.
+            Inspired by{" "}
+            <Link
+              className="font-mono font-medium text-blue-600 underline underline-offset-[3.5px]"
+              href={"https://eva.town/"}
+              target="_blank"
+            >
+              @Eva Decker
+            </Link>
+            's guestbook on her personal website.
+          </p>
+        </div>
+
+        <div className="pt-12 flex flex-col gap-8 md:grid md:grid-cols-2">
+          <StickyNoteTemplate
+            imgUrl={noteImgs[Math.floor(Math.random() * noteImgs.length)]}
+          />
+          {entries && entries.length > 0 ? (
+            entries.map((note) => (
+              <StickyNote
+                key={note.id}
+                imgUrl={noteImgs[Math.floor(Math.random() * noteImgs.length)]}
+                message={note.message}
+                name={note.name}
+                social={note.social}
+                date={note.created_at}
+              />
+            ))
+          ) : (
+            <p className="text-muted-foreground">No notes yet.</p>
+          )}
+        </div>
       </div>
     </div>
   );

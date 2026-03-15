@@ -22,10 +22,12 @@ export default function Home() {
           </div>
           <div>
             <h1 className="text-4xl pb-2 font-medium">Hi, I'm Vedeesh.</h1>
-            <p className="text-[20px]">
-              I’m a front-end engineer working on AI tooling, design systems,
-              and fun consumer products.
-            </p>
+            <div className="w-full flex items-center justify-center">
+              <p className="text-[20px] md:w-[75%]">
+                I’m a front-end engineer working on AI tooling, design systems,
+                and fun consumer products.
+              </p>
+            </div>
           </div>
         </div>
         <CurrentlyCard />

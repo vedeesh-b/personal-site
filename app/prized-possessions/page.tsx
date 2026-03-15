@@ -45,21 +45,25 @@ export default function PrizedPossessions() {
     },
   ];
   return (
-    <div className="py-30 flex flex-col items-center gap-8 text-start">
-      <div>
-        <h1 className="text-2xl pb-2 font-medium w-full text-start">
-          Prized Possessions
-        </h1>
-        <p>More of my favourite things that add value to my life every day.</p>
-      </div>
-      <div className="grid grid-cols-2 w-full aspect-square gap-6">
-        {possessions.map((possession) => (
-          <PossessionCard
-            key={possession.label}
-            imgUrl={possession.imgUrl}
-            label={possession.label}
-          />
-        ))}
+    <div className="py-30 w-full flex justify-center">
+      <div className=" flex flex-col items-center gap-12 text-start max-w-3xl justify-center">
+        <div className="w-full">
+          <h1 className="text-2xl pb-2 font-medium w-full text-start">
+            Prized Possessions
+          </h1>
+          <p>
+            More of my favourite things that add value to my life every day.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 w-full gap-6 md:grid-cols-3 lg:grid-cols-4">
+          {possessions.map((possession) => (
+            <PossessionCard
+              key={possession.label}
+              imgUrl={possession.imgUrl}
+              label={possession.label}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
