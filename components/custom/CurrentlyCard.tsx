@@ -25,7 +25,7 @@ const CurrentItem = ({
         {header}
       </div>
       <div className="flex flex-row gap-4 h-20">
-        <div className="relative h-full w-20 rounded-sm border-[0.33px]">
+        <div className="relative h-full w-20 rounded-sm border-[0.33px] aspect-square">
           <Image
             className="relative object-cover p-1 rounded-sm"
             src={imgUrl}
