@@ -17,12 +17,12 @@ export const Navbar = () => {
       href: "/about",
     },
     {
-      name: "Projects",
-      href: "/projects",
-    },
-    {
       name: "Guestbook",
       href: "/guestbook",
+    },
+    {
+      name: "Projects",
+      href: "/projects",
     },
   ];
   return (
