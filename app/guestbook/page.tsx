@@ -1,3 +1,5 @@
+export const revalidate = 60;
+
 import { StickyNote, StickyNoteTemplate } from "@/components/custom/StickyNote";
 import noteGreen from "@/assets/stickies/note-green.png";
 import noteBlue from "@/assets/stickies/note-blue.png";
