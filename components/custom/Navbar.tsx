@@ -20,10 +20,6 @@ export const Navbar = () => {
       name: "Projects",
       href: "/projects",
     },
-    // {
-    //   name: "Feed",
-    //   href: "/feed",
-    // },
     {
       name: "Guestbook",
       href: "/guestbook",
