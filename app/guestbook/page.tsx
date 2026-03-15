@@ -23,7 +23,7 @@ export default async function Guestbook() {
 
   return (
     <div className="py-30 w-full flex justify-center">
-      <div className=" flex flex-col items-center gap-12 text-start max-w-3xl justify-center">
+      <div className=" flex flex-col items-center gap-8 text-start max-w-3xl justify-center">
         <div>
           <h1 className="text-2xl pb-2 font-medium w-full text-start">
             Guestbook
