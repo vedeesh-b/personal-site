@@ -35,12 +35,12 @@ export default async function Guestbook() {
             Inspired by{" "}
             <Link
               className="font-mono font-medium text-blue-600 underline underline-offset-[3.5px]"
-              href={"https://eva.town/"}
+              href={"https://ky.fyi"}
               target="_blank"
             >
-              @Eva Decker
+              @Ky Decker
             </Link>
-            's guestbook on her personal website.
+            's guestbook on their personal website.
           </p>
         </div>
 
