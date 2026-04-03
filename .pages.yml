@@ -5,7 +5,7 @@ media:
 content:
   - name: blog
     label: Blog
-    path: src/content/blog
+    path: /content/blog
     filename: "{year}-{month}-{day}-{fields.title}.md"
     type: collection
     format: yaml-frontmatter
