@@ -1,0 +1,37 @@
+media:
+  input: public/media
+  output: /media
+
+content:
+  - name: blog
+    label: Blog
+    path: src/content/blog
+    filename: "{year}-{month}-{day}-{fields.title}.md"
+    type: collection
+    format: yaml-frontmatter
+    fields:
+      - name: title
+        label: Title
+        type: string
+        required: true
+      - name: description
+        label: Description
+        type: text
+      - name: pubDate
+        label: Publication Date
+        type: date
+        options:
+          format: MM/dd/yyyy
+      - name: heroImage
+        label: Hero Image
+        type: image
+      - name: body
+        label: Body
+        type: rich-text
+    view:
+      fields: [heroImage, title, pubDate]
+      primary: title
+      sort: [pubDate, title]
+      default:
+        sort: pubDate
+        order: desc
