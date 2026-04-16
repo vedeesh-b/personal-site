@@ -27,7 +27,7 @@ export const StickyNote = ({
         <p className="line-clamp-6 md:line-clamp-none">{message}</p>
         <div className="flex flex-col gap-1">
           {social ? (
-            <a href={social}>
+            <a href={social.startsWith("http") ? social : `https://${social}`} target="_blank" rel="noopener noreferrer">
               <p className="text-gray-700 underline underline-offset-4 truncate md:whitespace-normal md:overflow-visible">
                 {name}
               </p>
