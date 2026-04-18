@@ -116,7 +116,7 @@ export default function About() {
           />
           <Link
             href={"/prized-possessions"}
-            className="border-[0.33px] bg-neutral-900 text-white aspect-square rounded-xl p-2 flex flex-col gap-2 items-center justify-center"
+            className="border-[0.33px] bg-neutral-700 text-white aspect-square rounded-xl p-2 flex flex-col gap-2 items-center justify-center hover:bg-neutral-800 hover:shadow-md transition-colors duration-300"
           >
             <ArrowRight size={48} />
             <div>See All</div>

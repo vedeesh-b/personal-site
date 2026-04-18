@@ -21,6 +21,10 @@ export const Navbar = () => {
       href: "/projects",
     },
     {
+      name: "Feed",
+      href: "/feed",
+    },
+    {
       name: "Guestbook",
       href: "/guestbook",
     },

@@ -55,7 +55,7 @@ export default function PrizedPossessions() {
             More of my favourite things that add value to my life every day.
           </p>
         </div>
-        <div className="grid grid-cols-2 w-full gap-6 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 w-full gap-6 md:grid-cols-4">
           {possessions.map((possession) => (
             <PossessionCard
               key={possession.label}

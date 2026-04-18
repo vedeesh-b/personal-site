@@ -6,6 +6,7 @@ import {
   AccordionTrigger,
 } from "../ui/accordion";
 
+import albaniaFlag from "@/assets/flags/icons8-albania-100.png";
 import japanFlag from "@/assets/flags/icons8-japan-50.png";
 import maltaFlag from "@/assets/flags/icons8-malta-50.png";
 import uaeFlag from "@/assets/flags/icons8-united-arab-emirates-50.png";
@@ -21,6 +22,16 @@ import singaporeFlag from "@/assets/flags/icons8-singapore-50.png";
 
 export const TravelAccordion = () => {
   const items = [
+    {
+      value: "2026",
+      content: [
+        {
+          country: "Albania",
+          flag: albaniaFlag,
+          cities: ["Tirana", "Saranda"],
+        },
+      ],
+    },
     {
       value: "2025",
       content: [
@@ -123,7 +134,7 @@ export const TravelAccordion = () => {
     },
   ];
   return (
-    <Accordion type="multiple" className="w-full" defaultValue={[`2025`]}>
+    <Accordion type="multiple" className="w-full" defaultValue={["2026"]}>
       {items.map((item) => (
         <AccordionItem key={item.value} value={item.value}>
           <AccordionTrigger>{item.value}</AccordionTrigger>

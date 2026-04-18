@@ -6,7 +6,7 @@ content:
   - name: blog
     label: Blog
     path: src/content/blog
-    filename: "{year}-{month}-{day}-{fields.title}.md"
+    filename: "{year}-{month}-{day}-{fields.title}.mdx"
     type: collection
     format: yaml-frontmatter
     fields:
@@ -25,9 +25,13 @@ content:
       - name: heroImage
         label: Hero Image
         type: image
+      - name: heroImagePrompt
+        label: Hero Image Prompt
+        type: text
+        description: The AI prompt used to generate the hero image (shown as a tooltip)
       - name: body
         label: Body
-        type: rich-text
+        type: text
     view:
       fields: [heroImage, title, pubDate]
       primary: title

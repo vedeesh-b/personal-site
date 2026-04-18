@@ -73,7 +73,7 @@ export const SocialsCard = () => {
   return (
     <div className="w-full pb-30">
       <div className="w-full text-start font-medium pb-4">Reaching Out</div>
-      <div className="w-full grid grid-cols-3 border-[0.33px] gap-2 rounded-sm p-2">
+      <div className="w-full grid grid-cols-3 border-[0.33px] gap-2 rounded-xl p-2">
         {socials.map((social) =>
           isMobile ? (
             <MobileSocial
