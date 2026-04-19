@@ -21,16 +21,17 @@ import {
 
 // ImageCarousel: usage in MDX:
 // <ImageCarousel images={["/media/img1.png", "/media/img2.png"]} />
-function ImageCarousel({ images }: { images: string[] }) {
+function ImageCarousel({ images }: { images: string }) {
+  const srcs = images.split(",").map((s) => s.trim()).filter(Boolean);
   return (
     <Carousel className="w-full my-6">
       <CarouselContent>
-        {images.map((src, i) => (
-          <CarouselItem key={i}>
+        {srcs.map((src, i) => (
+          <CarouselItem key={i} className="flex justify-center">
             <img
               src={src}
               alt={`Slide ${i + 1}`}
-              className="w-full rounded-lg object-cover"
+              className="h-64 sm:h-80 w-auto rounded-lg object-contain"
             />
           </CarouselItem>
         ))}
