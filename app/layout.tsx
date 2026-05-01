@@ -1,16 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-} from "@/components/ui/navigation-menu";
-import Link from "next/link";
 import { Navbar } from "@/components/custom/Navbar";
 import { Footer } from "@/components/custom/Footer";
+import { FloatingButtons } from "@/components/custom/FloatingButtons";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,12 +31,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased px-6 py-8 md:px-20 lg:px-40`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Analytics />
         <TooltipProvider>
-          <Navbar />
-          {children}
-          <Footer />
+          <div className="px-6 py-8 md:px-20 lg:px-40">
+            <Navbar />
+            <FloatingButtons />
+            {children}
+            <Footer />
+          </div>
         </TooltipProvider>
       </body>
     </html>
