@@ -8,38 +8,89 @@ export interface AlcarazArticle {
   publishedAt: string;
 }
 
+type RawArticle = {
+  title?: string;
+  description?: string | null;
+  url?: string;
+  publishedAt?: string;
+  source?: { name?: string };
+};
+
+function scoreArticle(article: RawArticle) {
+  const text =
+    `${article.title ?? ""} ${article.description ?? ""}`.toLowerCase();
+  let score = 0;
+
+  if (text.includes("carlos alcaraz")) score += 10;
+  if (text.includes("tennis")) score += 3;
+  if (text.includes("atp")) score += 2;
+  if (text.includes("grand slam")) score += 2;
+  if (text.includes("wimbledon")) score += 2;
+  if (text.includes("roland garros")) score += 2;
+  if (article.title?.toLowerCase().includes("carlos alcaraz")) score += 5;
+
+  return score;
+}
+
 export async function GET() {
   const apiKey = process.env.NEWS_API_KEY;
+
   if (!apiKey) {
-    return NextResponse.json({ error: "NEWS_API_KEY not configured" }, { status: 500 });
+    return NextResponse.json(
+      { error: "NEWS_API_KEY not configured" },
+      { status: 500 },
+    );
   }
 
-  // Exact phrase match so only articles explicitly about Carlos Alcaraz are returned.
+  const params = new URLSearchParams({
+    q: '"Carlos Alcaraz" AND (tennis OR ATP)',
+    searchIn: "title,description",
+    language: "en",
+    sortBy: "relevancy",
+    from: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString(),
+    pageSize: "20",
+    apiKey,
+  });
+
   const res = await fetch(
-    `https://newsapi.org/v2/everything?q=%22Carlos+Alcaraz%22&language=en&sortBy=publishedAt&pageSize=1&apiKey=${apiKey}`,
-    { next: { revalidate: 3600 } }
+    `https://newsapi.org/v2/everything?${params.toString()}`,
+    {
+      next: { revalidate: 1800 },
+    },
   );
 
   if (!res.ok) {
-    return NextResponse.json({ error: "Failed to fetch news" }, { status: 502 });
+    const text = await res.text();
+    return NextResponse.json(
+      { error: "Failed to fetch news", details: text },
+      { status: 502 },
+    );
   }
 
   const data = await res.json();
-  const raw = (data.articles ?? []).find(
-    (a: { title?: string }) => a.title && a.title !== "[Removed]"
-  );
 
-  if (!raw) {
+  const best = (data.articles ?? [])
+    .filter(
+      (a: RawArticle) =>
+        a.title && a.title !== "[Removed]" && a.url && a.publishedAt,
+    )
+    .sort((a: RawArticle, b: RawArticle) => {
+      const scoreDiff = scoreArticle(b) - scoreArticle(a);
+      if (scoreDiff !== 0) return scoreDiff;
+      return (
+        new Date(b.publishedAt!).getTime() - new Date(a.publishedAt!).getTime()
+      );
+    })[0];
+
+  if (!best) {
     return NextResponse.json(null);
   }
 
-  const article: AlcarazArticle = {
-    title: raw.title,
-    description: raw.description ?? null,
-    url: raw.url,
-    source: raw.source.name,
-    publishedAt: raw.publishedAt,
-  };
-
-  return NextResponse.json(article);
+  return NextResponse.json({
+    title: best.title!,
+    description: best.description ?? null,
+    url: best.url!,
+    source: best.source?.name ?? "Unknown source",
+    publishedAt: best.publishedAt!,
+  } satisfies AlcarazArticle);
 }

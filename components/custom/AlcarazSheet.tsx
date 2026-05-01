@@ -55,7 +55,7 @@ export function AlcarazModal({ open, onOpenChange }: Props) {
         {/* Cover photo — plain img to avoid next/image remotePattern config */}
         <div className="relative w-full h-48 bg-muted overflow-hidden">
           <img
-            src="https://www.atptour.com/-/media/alias/player-headshot/A0AP"
+            src="https://ichef.bbci.co.uk/ace/standard/954/cpsprodpb/7dd8/live/72433610-3ff9-11f1-afbb-e15d65961cef.jpg"
             alt="Carlos Alcaraz"
             className="w-full h-full object-cover object-top"
           />
