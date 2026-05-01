@@ -69,8 +69,9 @@ export function AlcarazModal({ open, onOpenChange }: Props) {
             </DialogTitle>
           </DialogHeader>
           <p className="text-[12px] text-muted-foreground mt-1 leading-relaxed">
-            People tell me I look like him. I've decided to take it as a compliment
-            and follow his career closely.
+            I've been told he's my doppelgänger (including a comment in my
+            guestbook), so I built this news feed to keep up with what he's up
+            to.
           </p>
         </div>
 
@@ -87,7 +88,9 @@ export function AlcarazModal({ open, onOpenChange }: Props) {
 
           {(error || (!loading && fetched && !article)) && (
             <p className="text-[12px] text-muted-foreground">
-              {error ? "Could not load news. Check NEWS_API_KEY." : "No recent news found."}
+              {error
+                ? "Could not load news. Check NEWS_API_KEY."
+                : "No recent news found."}
             </p>
           )}
 
