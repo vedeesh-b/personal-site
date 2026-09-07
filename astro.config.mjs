@@ -7,6 +7,6 @@ import partytown from '@astrojs/partytown';
 
 // https://astro.build/config
 export default defineConfig({
-  adapter: vercel(),
-  integrations: [react(), partytown()]
+	adapter: vercel(),
+	integrations: [react(), partytown()],
 });

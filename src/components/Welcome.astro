@@ -1,20 +1,18 @@
 ---
-import FeedCard from "./FeedCard.astro";
-
+import FeedCard from './FeedCard.astro';
+import Hero from './sections/Hero.astro';
 ---
 
 <div id="container">
 	<main>
+		<Hero />
 		<section>
-		<FeedCard 
-					title="Migrating my photography portfolio from NextJS to Astro"
-					description="How I went about the redesign and some interesting observations on working with a content-based framework."  
-				/>
-	</section>
+			<FeedCard
+				title="Migrating my photography portfolio from NextJS to Astro"
+				description="How I went about the redesign and some interesting observations on working with a content-based framework."
+			/>
+		</section>
 	</main>
-	
-
-	
 </div>
 
 <style>
@@ -79,8 +77,8 @@ import FeedCard from "./FeedCard.astro";
 
 	pre {
 		font-family:
-			ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono',
-			monospace;
+			ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas,
+			'DejaVu Sans Mono', monospace;
 		font-weight: normal;
 		background: linear-gradient(14deg, #d83333 0%, #f041ff 100%);
 		-webkit-background-clip: text;

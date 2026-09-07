@@ -1,109 +1,111 @@
 ---
 interface NavbarLink {
-    title: string,
-    id: string,
-    newUpdate: boolean,
-    href: string
+	title: string;
+	id: string;
+	newUpdate: boolean;
+	href: string;
 }
 
 const navbarLinks: NavbarLink[] = [
-    {
-        title: 'About',
-        id: 'about',
-        newUpdate: false,
-        href: '/about'
-    },
-    {
-        title: 'Projects',
-        id: 'projects',
-        newUpdate: false,
-        href: '/projects'
-    },
-    {
-        title: 'Notes',
-        id: 'notes',
-        newUpdate: false,
-        href: '/notes'
-    },
-    {
-        title: 'Guestbook',
-        id: 'guestbook',
-        newUpdate: false,
-        href: '/guestbook'
-    },
-]
+	{
+		title: 'About',
+		id: 'about',
+		newUpdate: false,
+		href: '/about',
+	},
+	{
+		title: 'Projects',
+		id: 'projects',
+		newUpdate: false,
+		href: '/projects',
+	},
+	{
+		title: 'Notes',
+		id: 'notes',
+		newUpdate: false,
+		href: '/notes',
+	},
+	{
+		title: 'Guestbook',
+		id: 'guestbook',
+		newUpdate: false,
+		href: '/guestbook',
+	},
+];
 ---
 
 <div id="navbar">
-    <div id="branding">
-        <div id="headshot"></div>
-        <div id="branding-content">
-            <div class="name">Vedeesh Bali</div>
-            <div class="role">Product Engineer</div>
-        </div>
-    </div>
-    <div id="navbar-links">
-        {navbarLinks.map(link => (
-            <a href={link.href} class="navbar-item">
-                {link.title}
-            </a>
-        ))}
-    </div>
+	<div id="branding">
+		<div id="headshot"></div>
+		<div id="branding-content">
+			<div class="name">Vedeesh Bali</div>
+			<div class="role">Product Engineer</div>
+		</div>
+	</div>
+	<div id="navbar-links">
+		{
+			navbarLinks.map((link) => (
+				<a href={link.href} class="navbar-item">
+					{link.title}
+				</a>
+			))
+		}
+	</div>
 </div>
 
 <style>
-    a {
-        text-decoration: none;
-        color: #404040;
-    }
+	a {
+		text-decoration: none;
+		color: #404040;
+	}
 
-    a:hover {
-        color: #111;
-    }
+	a:hover {
+		color: #111;
+	}
 
-    .name {
-        font-weight: 500;
-        color: #000;
-        font-size: 16px;
-    }
+	.name {
+		font-weight: 500;
+		color: #000;
+		font-size: 16px;
+	}
 
-    .role {
-        font-size: 13px;
-        color: #666;
-    }
+	.role {
+		font-size: 13px;
+		color: #666;
+	}
 
-    #navbar {
-        width: 100%;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        padding: 1.5rem 8rem;
-        align-items: center;
-    }
+	#navbar {
+		width: 100%;
+		box-sizing: border-box;
+		display: flex;
+		flex-direction: row;
+		justify-content: space-between;
+		padding: 1.5rem 8rem;
+		align-items: center;
+	}
 
-    #navbar-links {
-        display: flex;
-        flex-direction: row;
-        gap: 1.5rem;
-    }
+	#navbar-links {
+		display: flex;
+		flex-direction: row;
+		gap: 1.5rem;
+	}
 
-    #branding {
-        display: flex;
-        flex-direction: row;
-        gap: 1rem;
-    }
+	#branding {
+		display: flex;
+		flex-direction: row;
+		gap: 1rem;
+	}
 
-    #branding-content {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
+	#branding-content {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+	}
 
-    #headshot {
-        width: 48px;
-        height: 48px;
-        border-radius: 100%;
-        background-color: #F6EFE4;
-    }
+	#headshot {
+		width: 48px;
+		height: 48px;
+		border-radius: 100%;
+		background-color: #f6efe4;
+	}
 </style>
