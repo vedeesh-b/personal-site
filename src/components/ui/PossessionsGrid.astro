@@ -1,0 +1,326 @@
+---
+import { Image } from 'astro:assets';
+import backpack from '../../assets/possessions/backpack.webp';
+import bookOfMemes from '../../assets/possessions/book-of-memes.webp';
+import camera from '../../assets/possessions/camera.webp';
+import sainzFlag from '../../assets/possessions/carlos-sainz-flag.webp';
+import cube from '../../assets/possessions/cube.webp';
+import garmin from '../../assets/possessions/garmin.webp';
+import sunglasses from '../../assets/possessions/pixelated-sunglasses.webp';
+import watch from '../../assets/possessions/watch.webp';
+
+// Cut out from their white backgrounds, so shadows follow each object.
+const possessions = [
+	{ label: 'Fujifilm XT-50', img: camera },
+	{ label: 'Garmin Vivosmart 5', img: garmin },
+	{ label: 'Superdry Montant Rucksack', img: backpack },
+	{ label: 'Pixelated Sunglasses', img: sunglasses },
+	{ label: 'Book of Tall Memes', img: bookOfMemes },
+	{ label: 'Carlos Sainz Flag', img: sainzFlag },
+	{ label: 'Rotary Pilot Chronograph', img: watch },
+	{ label: 'Mirror Cube (Broken)', img: cube },
+];
+---
+
+<div class="possessions">
+	{
+		possessions.map((possession, i) => (
+			<div class="item">
+				<button
+					type="button"
+					class="card"
+					style={`anchor-name: --possession-${i}`}
+					data-label={`possession-label-${i}`}
+				>
+					<span class="tilt">
+						<Image
+							src={possession.img}
+							alt={possession.label}
+							widths={[240, 400, 640]}
+							sizes="(max-width: 768px) 45vw, 20rem"
+						/>
+						<span class="sheen" aria-hidden="true" />
+					</span>
+				</button>
+				<div
+					id={`possession-label-${i}`}
+					class="label"
+					popover="manual"
+					aria-hidden="true"
+					style={`position-anchor: --possession-${i}`}
+				>
+					{possession.label}
+				</div>
+			</div>
+		))
+	}
+</div>
+
+<style>
+	.possessions {
+		display: grid;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 1.5rem;
+	}
+
+	.card {
+		display: block;
+		width: 100%;
+		aspect-ratio: 1;
+		padding: 0;
+		border: 0;
+		background: none;
+		cursor: pointer;
+		perspective: 600px;
+		-webkit-tap-highlight-color: transparent;
+		transition: opacity 200ms var(--ease-out);
+	}
+
+	.card:focus-visible {
+		outline: 2px solid #111;
+		outline-offset: 3px;
+		border-radius: 14px;
+	}
+
+	/* Tilts with the pointer. The button itself stays put, so its hit area
+	   doesn't move under the cursor. */
+	.tilt {
+		position: relative;
+		display: grid;
+		/* A fixed track, so the image's height: 100% has something to fill
+		   instead of growing to its natural size. */
+		grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+		place-items: center;
+		height: 100%;
+		box-sizing: border-box;
+		padding: 3rem;
+		overflow: hidden;
+		border: 1px solid #e5e5e5;
+		border-radius: 12px;
+		background-color: #fafafa;
+		transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+		transition:
+			transform 350ms var(--ease-out),
+			scale 150ms var(--ease-out);
+	}
+
+	.tilt img {
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.08));
+		transition:
+			scale 300ms var(--ease-out),
+			translate 300ms var(--ease-out),
+			filter 300ms var(--ease-out);
+	}
+
+	/* Light catching the card, from wherever the pointer is. */
+	.sheen {
+		position: absolute;
+		inset: 0;
+		background: radial-gradient(
+			circle at var(--px, 50%) var(--py, 50%),
+			rgb(255 255 255 / 0.55),
+			transparent 60%
+		);
+		mix-blend-mode: soft-light;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 300ms var(--ease-out);
+	}
+
+	.card:active .tilt {
+		scale: 0.97;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		/* While tilting, follow the pointer closely instead of easing. */
+		.card[data-tilting] .tilt {
+			transition:
+				transform 80ms linear,
+				scale 150ms var(--ease-out);
+		}
+
+		.card:hover .tilt img {
+			scale: 1.06;
+			translate: 0 -4px;
+			filter: drop-shadow(0 12px 12px rgb(0 0 0 / 0.18));
+		}
+
+		.card:hover .sheen {
+			opacity: 1;
+		}
+
+		/* Focus on the one being looked at. */
+		.possessions:has(.card:hover) .card:not(:hover) {
+			opacity: 0.6;
+		}
+	}
+
+	.label {
+		/* Undo the popover's centred default and hang it under its card. */
+		inset: auto;
+		position-area: bottom;
+		position-try-fallbacks: flip-block;
+		margin: 8px 0;
+		padding: 6px 10px;
+		border: 0;
+		border-radius: 6px;
+		background-color: #111;
+		color: #fff;
+		font-size: 13px;
+		line-height: 1.3;
+		white-space: nowrap;
+		pointer-events: none;
+		opacity: 0;
+		translate: 0 -4px;
+		transition:
+			opacity 150ms var(--ease-out),
+			translate 150ms var(--ease-out),
+			display 150ms allow-discrete,
+			overlay 150ms allow-discrete;
+	}
+
+	.label:popover-open {
+		opacity: 1;
+		translate: 0 0;
+	}
+
+	@starting-style {
+		.label:popover-open {
+			opacity: 0;
+			translate: 0 -4px;
+		}
+	}
+
+	@media (max-width: 768px) {
+		.possessions {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 1rem;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.tilt,
+		.tilt img,
+		.card[data-tilting] .tilt {
+			transition: none;
+		}
+
+		.card:hover .tilt img {
+			scale: none;
+			translate: none;
+		}
+
+		.sheen {
+			display: none;
+		}
+
+		.label {
+			translate: none;
+		}
+	}
+</style>
+
+<script>
+	const MAX_TILT = 8;
+	const HOVER_DELAY = 150;
+	const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
+	const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+	const anchorSupported = CSS.supports('anchor-name: --a');
+
+	const cards = [
+		...document.querySelectorAll<HTMLButtonElement>('.possessions .card'),
+	];
+	let open: HTMLButtonElement | null = null;
+
+	const labelOf = (card: HTMLButtonElement) =>
+		document.getElementById(card.dataset.label!)!;
+
+	// Without anchor positioning (older Safari, Firefox), place it by hand.
+	const place = (card: HTMLButtonElement, label: HTMLElement) => {
+		if (anchorSupported) return;
+		const rect = card.getBoundingClientRect();
+		label.style.position = 'fixed';
+		label.style.left = `${rect.left + rect.width / 2 - label.offsetWidth / 2}px`;
+		label.style.top = `${rect.bottom}px`;
+	};
+
+	const show = (card: HTMLButtonElement) => {
+		if (open && open !== card) hide(open);
+		const label = labelOf(card);
+		if (!label.matches(':popover-open')) label.showPopover();
+		place(card, label);
+		open = card;
+	};
+
+	const hide = (card: HTMLButtonElement) => {
+		const label = labelOf(card);
+		if (label.matches(':popover-open')) label.hidePopover();
+		if (open === card) open = null;
+	};
+
+	cards.forEach((card) => {
+		const tilt = card.querySelector<HTMLElement>('.tilt')!;
+		let timer = 0;
+		let frame = 0;
+		let lastPointer = '';
+
+		card.addEventListener('pointerdown', (event) => {
+			lastPointer = event.pointerType;
+		});
+
+		// Mouse: the label follows hover. Touch: a tap toggles it.
+		card.addEventListener('click', () => {
+			if (lastPointer === 'mouse') show(card);
+			else if (open === card) hide(card);
+			else show(card);
+			lastPointer = '';
+		});
+
+		card.addEventListener('pointerenter', (event) => {
+			if (event.pointerType !== 'mouse') return;
+			timer = window.setTimeout(() => show(card), HOVER_DELAY);
+		});
+
+		card.addEventListener('pointermove', (event) => {
+			if (event.pointerType !== 'mouse' || !finePointer.matches) return;
+			cancelAnimationFrame(frame);
+			frame = requestAnimationFrame(() => {
+				const rect = card.getBoundingClientRect();
+				const x = (event.clientX - rect.left) / rect.width;
+				const y = (event.clientY - rect.top) / rect.height;
+				tilt.style.setProperty('--px', `${x * 100}%`);
+				tilt.style.setProperty('--py', `${y * 100}%`);
+				if (reducedMotion.matches) return;
+				card.dataset.tilting = '';
+				tilt.style.setProperty('--rx', `${(0.5 - y) * MAX_TILT * 2}deg`);
+				tilt.style.setProperty('--ry', `${(x - 0.5) * MAX_TILT * 2}deg`);
+			});
+		});
+
+		card.addEventListener('pointerleave', (event) => {
+			cancelAnimationFrame(frame);
+			delete card.dataset.tilting;
+			tilt.style.removeProperty('--rx');
+			tilt.style.removeProperty('--ry');
+			if (event.pointerType !== 'mouse') return;
+			clearTimeout(timer);
+			hide(card);
+		});
+
+		card.addEventListener('focus', () => {
+			if (card.matches(':focus-visible')) show(card);
+		});
+		card.addEventListener('blur', () => hide(card));
+	});
+
+	// Tapping anywhere else, or Escape, closes the open label.
+	document.addEventListener('pointerdown', (event) => {
+		if (open && !open.contains(event.target as Node)) hide(open);
+	});
+	document.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape' && open) hide(open);
+	});
+</script>

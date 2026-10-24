@@ -1,41 +1,38 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# build output
+dist/
+
+# generated types
+.astro/
 
 # dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+node_modules/
 
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
+# logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# macOS-specific files
+.DS_Store
 
-# vercel
+# jetbrains setting folder
+.idea/
 .vercel
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# environment variables (vercel env pull writes .env.local)
+.env*
+!.env.example
+
+# agent tooling: the brag skill's media (.claude/skills/brag links into .agents)
+.agents/
+.claude/skills/brag
+.claude/worktrees/
+.claude/settings.local.json
+
+# full-length project video originals, not used by the build (see src/lib/projectVideos.ts)
+src/assets/projects/*/brag.mp4
+
+# agent planning notes and skill lockfile
+plans/
+skills-lock.json

@@ -1,0 +1,128 @@
+---
+import HalftonePortrait from '../ui/HalftonePortrait.astro';
+import LogoLink from '../ui/LogoLink.astro';
+
+const heading = 'Design Engineer building interfaces for humans and machines.';
+const jobs = [
+	{
+		employer: 'bp',
+		link: 'https://www.bp.com/en-GB/about-us/what-we-do/technology',
+		description:
+			"Building bp's design system from the ground up across component design, code implementation and governance. Alongside this, I've contributed agentic component validation mechanisms and AI-assisted brand vector generation.",
+	},
+	{
+		employer: 'Ironbridge',
+		link: 'https://ironbridge.tech/',
+		description:
+			"One of the founding members at Ironbridge working on components, agentic patterns, and interfaces serving AI infrastructure. So far, I've worked on knowledge graphs and enhancing human-agent collaboration between them.",
+	},
+];
+
+const currentJob = jobs[0];
+---
+
+<section id="hero">
+	<div class="hero-text">
+		<div class="meta-blocks">
+			<span>Vedeesh Bali</span>
+			<span
+				>Design Engineer @ <LogoLink href={currentJob.link}
+					>{currentJob.employer}</LogoLink
+				></span
+			>
+			<span>London, United Kingdom</span>
+		</div>
+		<div>
+			<!-- Each word in a span so the particle effect can find it, however
+			     the line wraps. -->
+			<h1 id="hero-heading">
+				{
+					heading
+						.split(' ')
+						.map((word, i) => [i > 0 && ' ', <span class="word">{word}</span>])
+				}
+			</h1>
+			<p
+				style="max-width: 36ch; font-size: 17px; line-height: 22px; letter-spacing: -0.4px"
+			>
+				{currentJob.description}
+			</p>
+		</div>
+		<!-- <ProjectFolder /> -->
+	</div>
+	<div class="hero-grid">
+		<HalftonePortrait
+			label="Portrait of Vedeesh painted in the style of Van Gogh's 1889 self-portrait, drawn as a halftone of brushstroke dashes"
+			interactive
+			priority
+			sizes="(max-width: 768px) 100vw, 26rem"
+		/>
+	</div>
+</section>
+
+<script>
+	import { particleText } from '../../lib/particleText';
+
+	particleText(document.getElementById('hero-heading')!);
+</script>
+
+<style>
+	#hero {
+		display: flex;
+		gap: 3rem;
+		padding-block: 3rem;
+	}
+
+	.hero-text {
+		flex: 1 1 0;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+	}
+
+	.hero-text p {
+		margin-bottom: 0;
+	}
+
+	.hero-grid {
+		flex: 0 1 26rem;
+		min-width: 0;
+		box-sizing: border-box;
+		padding: 0.33rem;
+		border: 1px #d9d9d9 solid;
+		border-radius: 8px;
+	}
+
+	.meta-blocks span {
+		display: block;
+		font-family: var(--font-mono);
+		padding-bottom: 0.33rem;
+		color: #4b5563;
+		letter-spacing: 0.5px;
+		font-size: 14px;
+		text-transform: uppercase;
+		font-weight: 500;
+	}
+
+	h1 {
+		font-size: 26px;
+		line-height: 29px;
+		letter-spacing: -1.4px;
+		margin-top: 4rem;
+		font-weight: 500;
+		color: #111;
+		max-width: 25ch;
+	}
+
+	@media (max-width: 768px) {
+		#hero {
+			flex-direction: column;
+		}
+
+		.hero-grid {
+			flex: none;
+			width: 100%;
+		}
+	}
+</style>

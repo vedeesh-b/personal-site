@@ -1,0 +1,27 @@
+---
+import Feed from "../components/sections/Feed.astro";
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Projects">
+	<main>
+		<h1 style="view-transition-name: page-title">Projects</h1>
+        <Feed />
+	</main>
+</Layout>
+
+<style>
+	main {
+		box-sizing: border-box;
+		padding: var(--page-padding-y) var(--page-padding-x);
+	}
+
+    h1 {
+		font-size: var(--text-xl);
+		margin-top: 0.25em;
+        padding-bottom: 0.5em;
+		font-weight: 500;
+		color: #111;
+        letter-spacing: var(--tracking-tight);
+	}
+</style>

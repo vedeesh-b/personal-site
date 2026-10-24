@@ -1,0 +1,207 @@
+---
+import { actions } from 'astro:actions';
+import GuestbookNotes from '../components/guestbook/GuestbookNotes.astro';
+import NoteForm from '../components/guestbook/NoteForm.astro';
+import Layout from '../layouts/Layout.astro';
+
+// Rendered per request: the form's no-JS fallback posts back to this page,
+// and its "started" time must be fresh. Nothing here waits on the database,
+// so it still renders straight away; the notes stream in from a server island.
+export const prerender = false;
+
+// After a successful note, redirect so refreshing doesn't post it again.
+const result = Astro.getActionResult(actions.signGuestbook);
+if (result && !result.error) return Astro.redirect('/guestbook', 303);
+
+// ?before=<id> shows the notes older than that one.
+const before = Number(Astro.url.searchParams.get('before')) || undefined;
+---
+
+<Layout title="Guestbook" description="Leave a handwritten sticky note on Vedeesh Bali’s guestbook.">
+	<main>
+		<h1 style="view-transition-name: page-title">Guestbook</h1>
+		<p class="intro">
+			Handwritten sticky notes are my favourite method of communication.
+			Inspired by <a href="https://ky.fyi" target="_blank" rel="noopener"
+				>@Ky Decker</a
+			>'s guestbook on their personal website.
+		</p>
+		<div class="notes" id="notes">
+			<NoteForm />
+			<GuestbookNotes server:defer before={before}>
+				<Fragment slot="fallback">
+					{
+						[-1.5, 2, -0.5, 1.5].map((tilt) => (
+							<div class="placeholder" style={`--tilt: ${tilt}deg`} />
+						))
+					}
+				</Fragment>
+			</GuestbookNotes>
+		</div>
+	</main>
+</Layout>
+
+<style>
+	main {
+		box-sizing: border-box;
+		padding: var(--page-padding-y) var(--page-padding-x);
+	}
+
+	h1 {
+		font-size: var(--text-xl);
+		margin-top: 0.25em;
+		padding-bottom: 0.5em;
+		font-weight: 500;
+		color: #111;
+		letter-spacing: var(--tracking-tight);
+	}
+
+	.intro {
+		max-width: 50ch;
+		margin: 0;
+	}
+
+	.intro a {
+		color: #2563eb;
+		text-underline-offset: 3.5px;
+	}
+
+	.notes {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, 18rem);
+		gap: 3rem 2rem;
+		padding-top: 3rem;
+	}
+
+	/* Blank paper where the notes will land, while they load. */
+	.placeholder {
+		width: 18rem;
+		aspect-ratio: 1;
+		border-radius: 4px;
+		background-color: #f4f1ea;
+		transform: rotate(var(--tilt));
+		animation: placeholder-pulse 1.6s ease-in-out infinite alternate;
+	}
+
+	@keyframes placeholder-pulse {
+		to {
+			opacity: 0.5;
+		}
+	}
+
+	/* Every note fades in as it arrives: the first batch from the server
+	   island, then any from posting or "Older notes". A batch staggers in. */
+	.notes :global([data-note-id]) {
+		animation: note-in 400ms var(--ease-out) both;
+		animation-delay: calc(var(--i, 0) * 40ms);
+	}
+
+	@keyframes note-in {
+		from {
+			opacity: 0;
+			translate: 0 8px;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.placeholder {
+			animation: none;
+		}
+
+		.notes :global([data-note-id]) {
+			animation-name: note-fade-in;
+		}
+
+		@keyframes note-fade-in {
+			from {
+				opacity: 0;
+			}
+		}
+	}
+</style>
+
+<script>
+	import { actions, isInputError } from 'astro:actions';
+
+	const notes = document.getElementById('notes')!;
+	const form = document.getElementById('note-form') as HTMLFormElement | null;
+
+	// Fetches just the notes (the /guestbook/notes partial) for a page of the
+	// guestbook, e.g. /guestbook?before=42.
+	async function fetchPage(pageUrl: string) {
+		const url = new URL(pageUrl, location.href);
+		url.pathname = '/guestbook/notes';
+		const response = await fetch(url);
+		if (!response.ok) throw new Error(`Guestbook: ${response.status}`);
+		const doc = new DOMParser().parseFromString(
+			await response.text(),
+			'text/html',
+		);
+		return {
+			notes: [...doc.querySelectorAll<HTMLElement>('[data-note-id]')],
+			older: doc.querySelector<HTMLAnchorElement>('#older')?.href ?? null,
+		};
+	}
+
+	// Post without reloading, then slot the new note in after the form.
+	if (form) {
+		const button = form.querySelector('button')!;
+		const label = button.querySelector('span')!;
+		const errorText = form.querySelector('.error')!;
+
+		form.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			button.disabled = true;
+			label.textContent = 'Posting…';
+			errorText.textContent = '';
+
+			const { error } = await actions.signGuestbook(new FormData(form));
+			if (error) {
+				const fields = isInputError(error) ? error.fields : {};
+				errorText.textContent =
+					fields.message?.[0] ??
+					fields.name?.[0] ??
+					fields.social?.[0] ??
+					(error.code === 'CONFLICT' || error.code === 'TOO_MANY_REQUESTS'
+						? error.message
+						: 'Something went wrong. Try again?');
+			} else {
+				const newest = Number(
+					notes.querySelector<HTMLElement>('[data-note-id]')?.dataset.noteId ??
+						0,
+				);
+				const { notes: latest } = await fetchPage('/guestbook').catch(() => ({
+					notes: [],
+				}));
+				const fresh = latest.filter((n) => Number(n.dataset.noteId) > newest);
+				form.after(...fresh);
+				form.reset();
+				form.querySelector<HTMLInputElement>('[name=started]')!.value = String(
+					Date.now(),
+				);
+			}
+
+			button.disabled = false;
+			label.textContent = 'Submit';
+		});
+	}
+
+	// Load older notes in place rather than on a new page. The link arrives
+	// with the server island, after this script runs, so listen on the grid.
+	notes.addEventListener('click', async (event) => {
+		const link = (event.target as Element).closest<HTMLAnchorElement>('#older');
+		if (!link) return;
+		event.preventDefault();
+		link.setAttribute('aria-busy', 'true');
+		try {
+			const page = await fetchPage(link.href);
+			link.parentElement!.before(...page.notes);
+			if (page.older) link.href = page.older;
+			else link.remove();
+		} catch {
+			// Fall back to a normal page load.
+			location.href = link.href;
+		}
+		link.removeAttribute('aria-busy');
+	});
+</script>

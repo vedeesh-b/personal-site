@@ -1,0 +1,68 @@
+---
+import { socialHref, type GuestbookEntry } from '../../lib/guestbook';
+import Sticky from './Sticky.astro';
+
+interface Props {
+	entry: GuestbookEntry;
+	/** Position in its batch, so a batch of notes can stagger in. */
+	order?: number;
+}
+
+const { entry, order = 0 } = Astro.props;
+const href = socialHref(entry.social);
+---
+
+<Sticky
+	as="article"
+	seed={entry.id}
+	data-note-id={entry.id}
+	style={`--i: ${order}`}
+>
+	<p class="message">{entry.message}</p>
+	<footer>
+		{
+			href ? (
+				<a href={href} target="_blank" rel="noopener noreferrer nofollow ugc">
+					{entry.name}
+				</a>
+			) : (
+				<span>{entry.name}</span>
+			)
+		}
+		<time datetime={entry.created_at.toISOString()}>
+			{entry.created_at.toDateString().slice(4)}
+		</time>
+	</footer>
+</Sticky>
+
+<style>
+	.message {
+		flex: 1;
+		min-height: 0;
+		margin: 0;
+		overflow-wrap: anywhere;
+		white-space: pre-line;
+		overflow: hidden;
+	}
+
+	footer {
+		display: flex;
+		flex-direction: column;
+		font-size: 17px;
+		color: #374151;
+	}
+
+	a,
+	span {
+		font-weight: 600;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	a {
+		color: inherit;
+		text-decoration: underline;
+		text-underline-offset: 4px;
+	}
+</style>

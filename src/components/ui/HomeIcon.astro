@@ -1,0 +1,24 @@
+---
+// A filled house, after Lucide's `house` (which only comes as an outline).
+// The door is a notch in the shape rather than a separate path, so it stays
+// open at small sizes and shows whatever is behind it. Takes currentColor.
+interface Props {
+	size?: number;
+	class?: string;
+}
+
+const { size = 12, class: className } = Astro.props;
+---
+
+<svg
+	class={className}
+	width={size}
+	height={size}
+	viewBox="0 0 24 24"
+	fill="currentColor"
+	aria-hidden="true"
+>
+	<path
+		d="M2 10.2a2.5 2.5 0 0 1 .87-1.9l7.5-6.4a2.5 2.5 0 0 1 3.26 0l7.5 6.4A2.5 2.5 0 0 1 22 10.2v9.3a2.5 2.5 0 0 1-2.5 2.5h-5v-5.5a1.5 1.5 0 0 0-1.5-1.5h-2a1.5 1.5 0 0 0-1.5 1.5V22h-5A2.5 2.5 0 0 1 2 19.5z"
+	></path>
+</svg>

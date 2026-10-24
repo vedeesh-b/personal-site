@@ -1,0 +1,309 @@
+---
+/*
+ * A concept for next season: a head-to-head prediction checked against the
+ * standings after every round. The card's footer charts each driver's
+ * championship position, and the lines draw in together, round by round,
+ * the first time the figure scrolls into view. The markup is the finished
+ * chart, so without JavaScript or with reduced motion it shows the end state.
+ */
+import type { ImageMetadata } from 'astro';
+import PredictionCard from './PredictionCard.astro';
+
+interface Driver {
+	name: string;
+	color: string;
+	/** Championship position after each round so far, P1 = 1. */
+	positions: number[];
+}
+
+interface Props {
+	tier: number;
+	points: number;
+	prediction: string;
+	image: ImageMetadata;
+	imageAlt: string;
+	imagePosition?: string;
+	drivers: Driver[];
+	/** What the result needs from here, next to the chart. */
+	status: string;
+	caption?: string;
+}
+
+const { tier, points, prediction, image, imageAlt, imagePosition, drivers, status, caption } =
+	Astro.props;
+
+// Plot area in viewBox units. The end labels are HTML beside the SVG, so
+// they keep a readable size however far the chart is scaled down.
+const WIDTH = 260;
+const HEIGHT = 130;
+const PLOT = { left: 4, right: 254, top: 14, bottom: 112 };
+const GRID_SIZE = 20;
+
+const rounds = Math.max(...drivers.map((d) => d.positions.length));
+const xOf = (i: number) => PLOT.left + (i / (rounds - 1)) * (PLOT.right - PLOT.left);
+const yOf = (position: number) =>
+	PLOT.top + ((position - 1) / (GRID_SIZE - 1)) * (PLOT.bottom - PLOT.top);
+
+const lines = drivers.map((driver) => {
+	const points = driver.positions.map((p, i) => ({ x: xOf(i), y: yOf(p) }));
+	const last = points[points.length - 1];
+	return {
+		...driver,
+		points,
+		d: points.map((p, i) => `${i ? 'L' : 'M'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' '),
+		last,
+		finish: driver.positions[driver.positions.length - 1],
+	};
+});
+
+// Keep the end labels from overlapping when the drivers are close.
+const labelYs = lines.map((l) => l.last.y).sort((a, b) => a - b);
+for (let i = 1; i < labelYs.length; i++) labelYs[i] = Math.max(labelYs[i], labelYs[i - 1] + 24);
+const labelYOf = new Map([...lines].sort((a, b) => a.last.y - b.last.y).map((l, i) => [l.name, labelYs[i]]));
+
+const clipId = `standings-${prediction.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40)}`;
+
+const summary = lines.map((l) => `${l.name} P${l.finish}`).join(', ');
+---
+
+<figure class="tracked-prediction">
+	<PredictionCard
+		tier={tier}
+		points={points}
+		prediction={prediction}
+		image={image}
+		imageAlt={imageAlt}
+		imagePosition={imagePosition}
+		highlights={drivers.map((d) => ({ text: d.name, color: d.color }))}
+	>
+		<div class="tracker" slot="footer">
+			<div class="chart">
+				<svg
+					viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+					role="img"
+					aria-label={`Championship position after each of ${rounds} rounds: ${summary}`}
+				>
+					<defs>
+						<clipPath id={clipId}>
+							{/* Grows with the animation; the line heads ride its right edge. */}
+							<rect class="reveal" x="0" y="0" width={WIDTH} height={HEIGHT} />
+						</clipPath>
+					</defs>
+
+					<line class="baseline" x1={PLOT.left} y1={PLOT.bottom + 8} x2={PLOT.right} y2={PLOT.bottom + 8} />
+
+					<g clip-path={`url(#${clipId})`}>
+						{lines.map((l) => <path class="line" d={l.d} style={`stroke: ${l.color}`} />)}
+					</g>
+
+					{
+						lines.map((l) => (
+							<circle
+								class="head"
+								cx={l.last.x}
+								cy={l.last.y}
+								r="3.5"
+								style={`fill: ${l.color}`}
+								data-points={JSON.stringify(l.points)}
+							/>
+						))
+					}
+				</svg>
+
+				<div class="labels" aria-hidden="true">
+					{
+						lines.map((l) => (
+							<span class="end-label" style={`top: ${(labelYOf.get(l.name)! / HEIGHT) * 100}%`}>
+								<span class="pill" style={`background-color: ${l.color}`}>
+									P{l.finish}
+								</span>
+								{l.name.split(' ').at(-1)}
+							</span>
+						))
+					}
+				</div>
+			</div>
+			<p class="status">{status}</p>
+		</div>
+	</PredictionCard>
+
+	{caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+	.tracked-prediction {
+		display: grid;
+		gap: 1.25rem;
+		margin: 3rem 0;
+		padding: 1.25rem;
+		border-radius: 16px;
+		background-color: #f6f6f6;
+	}
+
+	.tracker {
+		display: grid;
+		grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+		align-items: center;
+		gap: 1.5rem;
+	}
+
+	/* The SVG keeps its aspect ratio; the label column stretches to its
+	   height, so a label's top percentage lines up with its line's end. */
+	.chart {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: 0.6rem;
+	}
+
+	svg {
+		display: block;
+		width: 100%;
+		height: auto;
+		overflow: visible;
+	}
+
+	/* Strokes stay the same width at any scale. */
+	.baseline,
+	.line {
+		vector-effect: non-scaling-stroke;
+	}
+
+	.baseline {
+		stroke: #3d3d3d;
+		stroke-width: 3;
+		stroke-linecap: round;
+	}
+
+	.line {
+		fill: none;
+		stroke-width: 2.5;
+		stroke-linejoin: round;
+		stroke-linecap: round;
+	}
+
+	.labels {
+		position: relative;
+		min-width: 7.5rem;
+	}
+
+	.end-label {
+		position: absolute;
+		left: 0;
+		display: flex;
+		align-items: center;
+		gap: 0.45rem;
+		transform: translateY(-50%);
+		font-size: 13px;
+		white-space: nowrap;
+		color: #e6e6e6;
+	}
+
+	.pill {
+		padding: 0.15rem 0.5rem;
+		border-radius: 999px;
+		font-size: 12px;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+		color: #fff;
+	}
+
+	.status {
+		margin: 0;
+		font-size: 16px;
+		line-height: 1.45;
+		color: #a8a8a8;
+	}
+
+	figcaption {
+		font-size: 13px;
+		color: #6b6b6b;
+	}
+
+	@media (max-width: 640px) {
+		.tracker {
+			grid-template-columns: 1fr;
+			gap: 1rem;
+		}
+
+		.status {
+			font-size: 15px;
+		}
+	}
+</style>
+
+<script>
+	const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+	const DURATION = 1600;
+	// Same curve as --ease-out.
+	const ease = (t: number) => 1 - Math.pow(1 - t, 4);
+
+	document.querySelectorAll<HTMLElement>('.tracked-prediction').forEach((figure) => {
+		const svg = figure.querySelector<SVGSVGElement>('.chart svg')!;
+		const reveal = svg.querySelector<SVGRectElement>('.reveal')!;
+		const heads = [...svg.querySelectorAll<SVGCircleElement>('.head')].map((head) => ({
+			head,
+			points: JSON.parse(head.dataset.points!) as { x: number; y: number }[],
+		}));
+		const labels = [...figure.querySelectorAll<HTMLElement>('.end-label')];
+		const fullWidth = svg.viewBox.baseVal.width;
+		const start = heads[0].points[0].x;
+		const end = heads[0].points.at(-1)!.x;
+
+		let frame = 0;
+
+		// Where a polyline sits at a given x, for the moving line heads.
+		function yAt(points: { x: number; y: number }[], x: number) {
+			const i = points.findIndex((p) => p.x >= x);
+			if (i <= 0) return points[Math.max(i, 0)].y;
+			const a = points[i - 1];
+			const b = points[i];
+			return a.y + ((x - a.x) / (b.x - a.x)) * (b.y - a.y);
+		}
+
+		function draw(progress: number) {
+			const x = start + (end - start) * progress;
+			const done = progress >= 1;
+			reveal.setAttribute('width', String(done ? fullWidth : x));
+			heads.forEach(({ head, points }) => {
+				head.setAttribute('cx', String(x));
+				head.setAttribute('cy', String(yAt(points, x)));
+				head.style.opacity = progress > 0 ? '1' : '0';
+			});
+			labels.forEach((label) => {
+				label.style.transition = done ? 'opacity 300ms var(--ease-out)' : 'none';
+				label.style.opacity = done ? '1' : '0';
+			});
+		}
+
+		function play() {
+			const begin = performance.now();
+			const tick = (now: number) => {
+				const t = Math.min((now - begin) / DURATION, 1);
+				draw(ease(t));
+				if (t < 1) frame = requestAnimationFrame(tick);
+			};
+			frame = requestAnimationFrame(tick);
+		}
+
+		if (reducedMotion.matches) return;
+
+		// Plays once, the first time most of the chart is on screen, then stays drawn.
+		draw(0);
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				if (entry.intersectionRatio < 0.6) return;
+				observer.disconnect();
+				play();
+			},
+			{ threshold: 0.6 },
+		);
+		observer.observe(svg);
+
+		reducedMotion.addEventListener('change', () => {
+			if (!reducedMotion.matches) return;
+			observer.disconnect();
+			cancelAnimationFrame(frame);
+			draw(1);
+		});
+	});
+</script>

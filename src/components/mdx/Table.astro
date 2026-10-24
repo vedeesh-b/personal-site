@@ -1,0 +1,114 @@
+---
+interface Props {
+	columns: string[];
+	rows: string[][];
+	caption?: string;
+	/** Index of a column to emphasise, e.g. the "after" side of a comparison. */
+	emphasis?: number;
+}
+
+const { columns, rows, caption, emphasis } = Astro.props;
+---
+
+<figure>
+	{/* Scrolls sideways on narrow screens; focusable so keyboard users can scroll it too. */}
+	<div class="scroller" tabindex="0" role="region" aria-label={caption ?? 'Table'}>
+		<table>
+			<thead>
+				<tr>
+					{
+						columns.map((column, i) => (
+							<th scope="col" class:list={{ emphasis: i === emphasis }}>
+								{column}
+							</th>
+						))
+					}
+				</tr>
+			</thead>
+			<tbody>
+				{
+					rows.map((row) => (
+						<tr>
+							{row.map((cell, i) =>
+								i === 0 ? (
+									<th scope="row">{cell}</th>
+								) : (
+									<td class:list={{ emphasis: i === emphasis }}>{cell}</td>
+								),
+							)}
+						</tr>
+					))
+				}
+			</tbody>
+		</table>
+	</div>
+	{caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+	figure {
+		margin: 2rem 0;
+	}
+
+	.scroller {
+		overflow-x: auto;
+		border: 1px solid #e4e4e4;
+		border-radius: 12px;
+	}
+
+	.scroller:focus-visible {
+		outline: 2px solid #111;
+		outline-offset: 2px;
+	}
+
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 15px;
+		font-variant-numeric: tabular-nums;
+	}
+
+	th,
+	td {
+		padding: 0.7rem 1rem;
+		border-bottom: 1px solid #ececec;
+		text-align: left;
+		white-space: nowrap;
+	}
+
+	tbody tr:last-child > * {
+		border-bottom: 0;
+	}
+
+	thead th {
+		background-color: #f3f3f3;
+		font-size: 13px;
+		font-weight: 500;
+		color: #545454;
+	}
+
+	tbody th {
+		font-weight: 400;
+		color: #545454;
+		white-space: normal;
+	}
+
+	td {
+		color: #545454;
+	}
+
+	.emphasis {
+		font-weight: 500;
+		color: #111;
+	}
+
+	thead th.emphasis {
+		color: #111;
+	}
+
+	figcaption {
+		margin-top: 0.75rem;
+		font-size: 13px;
+		color: #6b6b6b;
+	}
+</style>

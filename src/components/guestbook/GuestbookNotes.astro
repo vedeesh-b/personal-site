@@ -1,0 +1,66 @@
+---
+import { getEntries, PAGE_SIZE, type GuestbookEntry } from '../../lib/guestbook';
+import Note from './Note.astro';
+
+interface Props {
+	/** Show the notes older than this id. */
+	before?: number;
+}
+
+const { before } = Astro.props;
+
+// If the database is down, still let people leave a note for later.
+let entries: GuestbookEntry[] | null = null;
+try {
+	entries = await getEntries(before);
+} catch (error) {
+	console.error('Guestbook: could not load notes', error);
+}
+const page = entries?.slice(0, PAGE_SIZE) ?? [];
+const older =
+	entries && entries.length > PAGE_SIZE
+		? `/guestbook?before=${page.at(-1)!.id}`
+		: null;
+---
+
+{page.map((entry, i) => <Note entry={entry} order={i} />)}
+{
+	(entries === null || (page.length === 0 && !before) || older) && (
+		<div class="after">
+			{entries === null ? (
+				<p class="status">Couldn't load the notes right now. Try again soon.</p>
+			) : (
+				page.length === 0 &&
+				!before && <p class="status">No notes yet. Be the first!</p>
+			)}
+			{older && (
+				<a class="older" id="older" href={older}>
+					Older notes
+				</a>
+			)}
+		</div>
+	)
+}
+
+<style>
+	/* Below the notes, across the whole grid. */
+	.after {
+		grid-column: 1 / -1;
+	}
+
+	.status {
+		color: #6b7280;
+		margin: 0;
+	}
+
+	.older {
+		display: inline-block;
+		color: #111;
+		text-underline-offset: 4px;
+	}
+
+	.older[aria-busy='true'] {
+		opacity: 0.6;
+		pointer-events: none;
+	}
+</style>

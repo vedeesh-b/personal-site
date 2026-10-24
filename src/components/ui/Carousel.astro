@@ -1,0 +1,180 @@
+---
+import PhotographySlide from '../carousel/PhotographySlide.astro';
+import TravelSlide from '../carousel/TravelSlide.astro';
+
+const slides = ['Travel', 'Photography'];
+---
+
+<section
+	class="carousel"
+	aria-roledescription="carousel"
+	aria-label="Interests"
+>
+	<div class="viewport">
+		<div class="track">
+			<div class="slide" aria-roledescription="slide" aria-label={slides[0]}>
+				<TravelSlide />
+			</div>
+			<div
+				class="slide"
+				aria-roledescription="slide"
+				aria-label={slides[1]}
+				inert
+			>
+				<PhotographySlide />
+			</div>
+			{
+				slides.slice(2).map((title) => (
+					<div
+						class="slide"
+						aria-roledescription="slide"
+						aria-label={title}
+						inert
+					>
+						<div class="placeholder-grid">
+							<div />
+							<div />
+							<div />
+						</div>
+					</div>
+				))
+			}
+		</div>
+	</div>
+
+	<div class="controls">
+		<span class="title" aria-live="polite">{slides[0]}</span>
+		<div class="buttons">
+			<button class="prev" type="button" aria-label="Previous slide" disabled>
+				<svg viewBox="0 0 24 24" aria-hidden="true"
+					><path d="M15 18l-6-6 6-6"></path></svg
+				>
+			</button>
+			<button class="next" type="button" aria-label="Next slide">
+				<svg viewBox="0 0 24 24" aria-hidden="true"
+					><path d="M9 18l6-6-6-6"></path></svg
+				>
+			</button>
+		</div>
+	</div>
+</section>
+
+<style>
+	.viewport {
+		width: 100%;
+		height: 28rem;
+		overflow: hidden;
+		background-color: #f6efe4;
+		border-radius: 16px;
+	}
+
+	.track {
+		display: flex;
+		height: 100%;
+		transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1);
+	}
+
+	.slide {
+		flex: 0 0 100%;
+		height: 100%;
+	}
+
+	.placeholder-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 12px;
+		height: 100%;
+		box-sizing: border-box;
+		padding: 12px;
+	}
+
+	.placeholder-grid > div {
+		background-color: #fffcf7;
+		border-radius: 12px;
+	}
+
+	.controls {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding-top: 12px;
+	}
+
+	.title {
+		font-family: var(--font-mono);
+		font-size: 13px;
+		font-weight: 500;
+		text-transform: uppercase;
+		color: #808080;
+	}
+
+	.buttons {
+		display: flex;
+		gap: 8px;
+	}
+
+	button {
+		display: grid;
+		place-items: center;
+		width: 32px;
+		height: 32px;
+		padding: 0;
+		border: 1px solid #e2dccf;
+		border-radius: 50%;
+		background-color: #fff;
+		color: #111;
+		cursor: pointer;
+		transition:
+			background-color 0.15s ease,
+			opacity 0.15s ease;
+	}
+
+	button:hover:not(:disabled) {
+		background-color: #f6efe4;
+	}
+
+	button:disabled {
+		opacity: 0.4;
+		cursor: default;
+	}
+
+	svg {
+		width: 16px;
+		height: 16px;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.track {
+			transition: none;
+		}
+	}
+</style>
+
+<script>
+	document.querySelectorAll<HTMLElement>('.carousel').forEach((carousel) => {
+		const track = carousel.querySelector<HTMLElement>('.track')!;
+		const slides = [...carousel.querySelectorAll<HTMLElement>('.slide')];
+		const title = carousel.querySelector<HTMLElement>('.title')!;
+		const prev = carousel.querySelector<HTMLButtonElement>('.prev')!;
+		const next = carousel.querySelector<HTMLButtonElement>('.next')!;
+		let index = 0;
+
+		const goTo = (i: number) => {
+			index = Math.max(0, Math.min(slides.length - 1, i));
+			track.style.transform = `translateX(-${index * 100}%)`;
+			// Keep off-screen slides (and the iframe inside one) out of the tab order.
+			slides.forEach((slide, j) => (slide.inert = j !== index));
+			title.textContent = slides[index].getAttribute('aria-label');
+			prev.disabled = index === 0;
+			next.disabled = index === slides.length - 1;
+		};
+
+		prev.addEventListener('click', () => goTo(index - 1));
+		next.addEventListener('click', () => goTo(index + 1));
+	});
+</script>

@@ -1,0 +1,231 @@
+---
+import { profile } from '../data/profile';
+import HalftonePortrait from './ui/HalftonePortrait.astro';
+
+// Plays on a visitor's first page in a session: the portrait grows in, fades,
+// and the name and role glide into their places in the navbar. The inline
+// script in Layout's <head> decides whether it plays, before first paint.
+---
+
+<div id="splash" aria-hidden="true">
+	<div class="backdrop"></div>
+	<div class="content">
+		<HalftonePortrait intro sizes="(max-width: 768px) 60vw, 280px" />
+		<div class="text">
+			<div class="name">{profile.name}</div>
+			<div class="role">{profile.role}</div>
+		</div>
+	</div>
+</div>
+
+<style>
+	#splash {
+		display: none;
+		position: fixed;
+		inset: 0;
+		z-index: 100;
+	}
+
+	:global(html[data-splash]) #splash {
+		display: block;
+	}
+
+	/* If the script never takes over, get out of the way. */
+	:global(html[data-splash='']) #splash {
+		animation: splash-failsafe 0s 4s forwards;
+	}
+
+	@keyframes splash-failsafe {
+		to {
+			visibility: hidden;
+		}
+	}
+
+	.backdrop {
+		position: absolute;
+		inset: 0;
+		background: #fff;
+	}
+
+	.content {
+		position: relative;
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 1.75rem;
+	}
+
+	.content :global(.halftone) {
+		width: min(280px, 60vw);
+	}
+
+	.text {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.25rem;
+		animation: splash-text-in 400ms var(--ease-out) both;
+	}
+
+	/* Same styles as the navbar's, larger: they shrink into place. */
+	.name {
+		font-weight: 500;
+		color: #000;
+		font-size: 28px;
+		transform-origin: 0 0;
+	}
+
+	.role {
+		font-size: 18px;
+		color: #666;
+		transform-origin: 0 0;
+	}
+
+	@keyframes splash-text-in {
+		from {
+			opacity: 0;
+			transform: translateY(6px);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.text {
+			animation: none;
+		}
+
+		/* No growing in: show the finished portrait straight away. */
+		.content :global(.halftone img) {
+			opacity: 1;
+		}
+	}
+</style>
+
+<script>
+	import { mountHalftone } from '../lib/halftone/portrait';
+
+	const html = document.documentElement;
+	const splash = document.getElementById('splash');
+	if ('splash' in html.dataset && splash) {
+		// On a slow connection the CSS failsafe may already have hidden it.
+		if (performance.now() > 3500) {
+			splash.remove();
+			delete html.dataset.splash;
+		} else {
+			play(splash);
+		}
+	}
+
+	async function play(splash: HTMLElement) {
+		html.dataset.splash = 'playing';
+		const portrait = splash.querySelector<HTMLElement>('.halftone')!;
+		const poster = portrait.querySelector('img')!;
+		const name = splash.querySelector<HTMLElement>('.name')!;
+		const role = splash.querySelector<HTMLElement>('.role')!;
+		const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+		const ease = (name: string) =>
+			getComputedStyle(html).getPropertyValue(name).trim();
+
+		let finished = false;
+		const animations: Animation[] = [];
+		const animate = (
+			el: Element,
+			keyframes: Keyframe[],
+			options: KeyframeAnimationOptions,
+		) => {
+			const animation = el.animate(keyframes, { fill: 'forwards', ...options });
+			animations.push(animation);
+			return animation.finished.catch(() => {});
+		};
+		const wait = (ms: number) => new Promise((done) => setTimeout(done, ms));
+
+		const halftone = reduceMotion
+			? null
+			: await Promise.race([
+					mountHalftone(portrait, { intro: true }),
+					wait(600).then(() => null),
+				]);
+
+		function finish() {
+			if (finished) return;
+			finished = true;
+			removeEventListener('pointerdown', skip);
+			removeEventListener('keydown', skip);
+			removeEventListener('wheel', skip);
+			removeEventListener('touchmove', skip);
+			halftone?.destroy();
+			splash.remove();
+			delete html.dataset.splash;
+		}
+
+		// Any input means they want the site now.
+		async function skip() {
+			if (finished) return;
+			animations.forEach((animation) => animation.pause());
+			await splash.animate({ opacity: 0 }, 150).finished;
+			finish();
+		}
+		addEventListener('pointerdown', skip);
+		addEventListener('keydown', skip);
+		addEventListener('wheel', skip, { passive: true });
+		addEventListener('touchmove', skip, { passive: true });
+
+		if (reduceMotion) {
+			await wait(800);
+			if (finished) return;
+			await animate(splash, [{ opacity: 0 }], { duration: 300 });
+			return finish();
+		}
+
+		// 1. Grow the portrait in. Without WebGL, fade the poster in instead.
+		if (halftone) {
+			await halftone.develop(1200);
+		} else {
+			await animate(poster, [{ opacity: 0 }, { opacity: 1 }], {
+				duration: 400,
+				easing: ease('--ease-out'),
+			});
+			await wait(800);
+		}
+		if (finished) return;
+
+		// 2. Hold, then fade the portrait away.
+		await wait(400);
+		if (finished) return;
+		await animate(portrait, [{ opacity: 0, transform: 'scale(0.98)' }], {
+			duration: 300,
+			easing: ease('--ease-out'),
+		});
+		if (finished) return;
+
+		// 3. Move the name and role onto the navbar's (hidden) copies, while
+		//    the page fades in behind them.
+		const moves = [
+			[name, document.querySelector('#branding-content .name')],
+			[role, document.querySelector('#branding-content .role')],
+		].map(([from, to]) => {
+			if (!from || !to) return Promise.resolve();
+			const a = from.getBoundingClientRect();
+			const b = to.getBoundingClientRect();
+			const scale = b.height / a.height;
+			return animate(
+				from,
+				[
+					{
+						transform: `translate(${b.left - a.left}px, ${b.top - a.top}px) scale(${scale})`,
+					},
+				],
+				{ duration: 500, easing: ease('--ease-in-out') },
+			);
+		});
+		moves.push(
+			animate(splash.querySelector('.backdrop')!, [{ opacity: 0 }], {
+				duration: 500,
+				easing: ease('--ease-in-out'),
+			}),
+		);
+		await Promise.all(moves);
+		finish();
+	}
+</script>
