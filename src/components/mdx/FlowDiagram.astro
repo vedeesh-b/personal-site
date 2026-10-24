@@ -1,0 +1,701 @@
+---
+import { Image as ImageIcon } from '@lucide/astro';
+
+interface Step {
+	title: string;
+	detail?: string;
+	/** Build steps happen once per deploy; request steps happen for every visitor. */
+	phase: 'build' | 'request';
+	/** What this step costs the visitor, e.g. '184KB JS'. Shown in the accent colour. */
+	cost?: string;
+}
+
+interface Lane {
+	title: string;
+	steps: Step[];
+	/** Seconds for a pulse to travel from the first step to the last. Lower is faster. */
+	pulse?: number;
+}
+
+/** A side panel comparing one number across the lanes, as a bar per lane. */
+interface Metric {
+	title: string;
+	subtitle?: string;
+	unit: string;
+	/** One value per lane, in lane order. */
+	values: number[];
+	caption?: string;
+}
+
+interface Props {
+	title: string;
+	lanes: Lane[];
+	/** The step every lane ends on. */
+	result?: string;
+	metric?: Metric;
+	caption?: string;
+}
+
+const {
+	title,
+	lanes,
+	result = 'Image on screen',
+	metric,
+	caption,
+} = Astro.props;
+
+// Rows: lane titles, then the build zone (if any lane has build steps), then
+// the visit zone. Lanes end as soon as their own steps run out, so a lane
+// with more per-visit work is visibly taller.
+const split = lanes.map((lane) => ({
+	build: lane.steps.filter((step) => step.phase === 'build'),
+	visit: lane.steps.filter((step) => step.phase === 'request'),
+}));
+const buildRows = Math.max(...split.map((lane) => lane.build.length));
+const buildLabelRow = 2;
+const buildStart = buildLabelRow + 1;
+const visitLabelRow = buildRows ? buildStart + buildRows : 2;
+const visitStart = visitLabelRow + 1;
+
+const placed = lanes.map((lane, index) => {
+	const { build, visit } = split[index];
+	const steps = [
+		...build.map((step, i) => ({ ...step, row: buildStart + i })),
+		...visit.map((step, i) => ({ ...step, row: visitStart + i })),
+	];
+	const resultRow = visitStart + visit.length;
+	return {
+		...lane,
+		steps,
+		resultRow,
+		firstRow: steps[0]?.row ?? resultRow,
+		emptyBuild: buildRows > 0 && build.length === 0,
+	};
+});
+
+const maxMetric = metric ? Math.max(...metric.values) : 0;
+---
+
+<figure
+	class:list={['flow', { wide: metric }]}
+	aria-label={title}
+	style={`--lanes: ${lanes.length}`}
+>
+	<div class="diagram-title">{title}</div>
+	<div class="layout">
+		<div class="lanes">
+			{
+				placed.map((lane, index) => (
+					<div
+						class="lane-title"
+						style={`grid-column: ${index + 1}; grid-row: 1`}
+					>
+						{lane.title}
+					</div>
+				))
+			}
+
+			{
+				buildRows > 0 && (
+					<div class="zone build" style={`grid-row: ${buildLabelRow}`}>
+						<span>Build [Once per deploy]</span>
+					</div>
+				)
+			}
+			<div class="zone visit" style={`grid-row: ${visitLabelRow}`}>
+				<span>Each visit</span>
+			</div>
+
+			{
+				placed.map((lane, index) => (
+					<>
+						{/* The connector, sized and animated by the script. */}
+						<div
+							class="rail"
+							data-lane={index}
+							data-pulse={lane.pulse}
+							aria-hidden="true"
+							style={`grid-column: ${index + 1}; grid-row: ${lane.firstRow} / ${lane.resultRow + 1}`}
+						>
+							<div class="line">
+								<div class="comet" />
+							</div>
+						</div>
+
+						{lane.emptyBuild && (
+							<div
+								class="empty"
+								style={`grid-column: ${index + 1}; grid-row: ${buildStart} / span ${buildRows}`}
+							>
+								Nothing prepared ahead of time
+							</div>
+						)}
+
+						{lane.steps.map(
+							({ title: stepTitle, detail, cost, phase, row }) => (
+								<div
+									class:list={['step', phase]}
+									data-lane={index}
+									style={`grid-column: ${index + 1}; grid-row: ${row}`}
+								>
+									<span class="dot" aria-hidden="true" />
+									<div class="card">
+										<span class="step-title">{stepTitle}</span>
+										{detail && <span class="detail">{detail}</span>}
+										{cost && <span class="cost">{cost}</span>}
+									</div>
+								</div>
+							),
+						)}
+
+						<div
+							class="step result"
+							data-lane={index}
+							style={`grid-column: ${index + 1}; grid-row: ${lane.resultRow}`}
+						>
+							<span class="dot" aria-hidden="true" />
+							<div class="card">
+								<span class="frame" aria-hidden="true">
+									<span class="frame-fill">
+										<ImageIcon size={16} />
+									</span>
+								</span>
+								<span class="step-title">{result}</span>
+							</div>
+						</div>
+					</>
+				))
+			}
+		</div>
+
+		{
+			metric && (
+				<div class="metric">
+					<div class="metric-title">{metric.title}</div>
+					{metric.subtitle && (
+						<div class="metric-subtitle">{metric.subtitle}</div>
+					)}
+					<ul class="bars">
+						{lanes.map((lane, index) => {
+							const value = metric.values[index] ?? 0;
+							return (
+								<li class:list={{ costly: value === maxMetric }}>
+									<span class="bar-value">
+										{value.toLocaleString('en-GB')} {metric.unit}
+									</span>
+									<span
+										class="bar"
+										aria-hidden="true"
+										style={`height: calc((100% - 2.5rem) * ${(value / maxMetric).toFixed(4)})`}
+									/>
+									<span class="bar-label">{lane.title}</span>
+								</li>
+							);
+						})}
+					</ul>
+					{metric.caption && <div class="metric-caption">{metric.caption}</div>}
+				</div>
+			)
+		}
+	</div>
+	{caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+	.flow {
+		--rail-x: 0.6rem;
+		--ink: #222;
+		--muted: #6b6b6b;
+		--hairline: #e3e3e3;
+		--accent: #e0662f;
+		--paper: #f6efe4;
+
+		margin: 3rem 0;
+		container-type: inline-size;
+	}
+
+	/* With a side panel the figure outgrows the 65ch text column, into the
+	   free space to its right. */
+	.flow.wide {
+		width: min(58rem, calc(100vw - 2 * var(--page-padding-x)));
+	}
+
+	.diagram-title {
+		margin: 0 0 2rem;
+		font-size: 20px;
+		font-weight: 500;
+		letter-spacing: -0.3px;
+		color: var(--ink);
+	}
+
+	.layout {
+		display: grid;
+		gap: 2.5rem;
+	}
+
+	@container (min-width: 46rem) {
+		.wide .layout {
+			grid-template-columns: minmax(0, 1fr) 15rem;
+			align-items: start;
+		}
+	}
+
+	/* Every item is placed on explicit rows, so matching zones line up across lanes. */
+	.lanes {
+		display: grid;
+		grid-template-columns: repeat(var(--lanes), minmax(0, 1fr));
+		column-gap: 2rem;
+		row-gap: 0.75rem;
+	}
+
+	.lane-title {
+		margin: 0 0 0.25rem;
+		font-size: 18px;
+		color: var(--muted);
+	}
+
+	/* Zone labels span every lane, with a rule running out to the edge. */
+	.zone {
+		grid-column: 1 / -1;
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		margin: 0.5rem 0 0.25rem;
+		font-size: 11.5px;
+		letter-spacing: 0.8px;
+		text-transform: uppercase;
+		color: var(--muted);
+	}
+
+	.zone::after {
+		content: '';
+		flex: 1;
+		border-top: 1px solid var(--hairline);
+	}
+
+	.zone.build::after {
+		border-top-style: dashed;
+		border-color: #cfcfcf;
+	}
+
+	.empty {
+		align-self: center;
+		margin: 0;
+		padding-left: calc(var(--rail-x) * 2 + 0.75rem);
+		font-size: 13px;
+		color: #9a9a9a;
+	}
+
+	/* The connector: a hairline through every dot in the lane. Without the
+	   script it runs the lane's full height. */
+	.rail {
+		position: relative;
+		pointer-events: none;
+	}
+
+	.line {
+		position: absolute;
+		top: 1.2rem;
+		bottom: 0;
+		left: calc(var(--rail-x) - 0.75px);
+		width: 1.5px;
+		overflow: hidden;
+		background-color: var(--hairline);
+	}
+
+	/* A comet: bright leading edge at the bottom, tail fading upwards. */
+	.comet {
+		height: 2.5rem;
+		background-image: linear-gradient(to bottom, transparent, var(--ink));
+		opacity: 0;
+	}
+
+	/* Cards keep their own height instead of stretching to match the other
+	   lane's row, so a lane with less work stays visibly shorter. */
+	.step {
+		position: relative;
+		align-self: start;
+		display: flex;
+		gap: 0.75rem;
+		z-index: 1;
+	}
+
+	.dot {
+		flex: none;
+		box-sizing: border-box;
+		width: calc(var(--rail-x) * 2);
+		height: calc(var(--rail-x) * 2);
+		margin-top: calc(1.2rem - var(--rail-x));
+		border: 1.5px solid #c4c4c4;
+		border-radius: 50%;
+		background-color: #fff;
+	}
+
+	.build .dot {
+		border-style: dashed;
+	}
+
+	.card {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.2rem;
+		min-width: 0;
+		padding: 8px 12px;
+		border: 1px solid var(--hairline);
+		border-radius: 10px;
+		background-color: #fff;
+	}
+
+	.build .card {
+		border-style: dashed;
+		border-color: #cfcfcf;
+	}
+
+	.step-title {
+		font-size: 14px;
+		line-height: 16px;
+		letter-spacing: -0.24px;
+		font-weight: 500;
+		color: var(--ink);
+	}
+
+	.detail {
+		font-size: 14px;
+		line-height: 16px;
+		letter-spacing: -0.5px;
+		color: var(--muted);
+	}
+
+	.cost {
+		margin-top: 0.5rem;
+		padding: 0 0.5rem;
+		border-radius: 999px;
+		font-size: 12px;
+		line-height: 18px;
+		font-variant-numeric: tabular-nums;
+		color: var(--accent);
+		background-color: rgb(224 102 47 / 0.1);
+	}
+
+	/* The finish line: a small photo frame that "develops" when the pulse lands. */
+	.result .card {
+		flex-direction: row;
+		align-items: center;
+		gap: 0.65rem;
+		border-color: #cfcfcf;
+	}
+
+	.frame {
+		flex: none;
+		border-radius: 4px;
+		background-color: #f2f2f2;
+		overflow: hidden;
+	}
+
+	.frame-fill {
+		display: grid;
+		place-items: center;
+		padding: 4px;
+		color: #8a6d4b;
+		background-color: var(--paper);
+	}
+
+	/* Side panel: one bar per lane, the costly one in the accent colour. */
+	.metric {
+		padding: 1.5rem 1.25rem 1.25rem;
+		border-radius: 16px;
+		background-color: var(--paper);
+		text-align: center;
+	}
+
+	.metric-title {
+		margin: 0;
+		font-size: 16px;
+		color: var(--ink);
+	}
+
+	.metric-subtitle {
+		margin: 0.25rem 0 0;
+		text-wrap: balance;
+		font-size: 12.5px;
+		line-height: 1.4;
+		color: var(--muted);
+	}
+
+	.bars {
+		display: flex;
+		justify-content: space-around;
+		align-items: flex-end;
+		height: 13rem;
+		margin: 1.5rem 0 2.25rem;
+		padding: 0;
+		list-style: none;
+		border-bottom: 1px solid #ddd3c3;
+		position: relative;
+	}
+
+	.bars li {
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 0.5rem;
+		height: 100%;
+		position: relative;
+	}
+
+	.bar-value {
+		padding: 0.1rem 0.5rem;
+		border: 1px solid #e6dccb;
+		border-radius: 6px;
+		background-color: #fff;
+		font-size: 14px;
+		font-variant-numeric: tabular-nums;
+		color: var(--ink);
+	}
+
+	.bar {
+		width: 10px;
+		border-radius: 5px 5px 0 0;
+		background-color: var(--ink);
+		transform-origin: bottom;
+	}
+
+	.costly .bar {
+		background-color: var(--accent);
+	}
+
+	.bar-label {
+		position: absolute;
+		bottom: -1.65rem;
+		font-size: 13px;
+		color: var(--muted);
+		white-space: nowrap;
+	}
+
+	.metric-caption {
+		margin: 1.25rem 0 0;
+		text-wrap: balance;
+		font-size: 12.5px;
+		line-height: 1.45;
+		color: var(--muted);
+	}
+
+	figcaption {
+		margin-top: 1.25rem;
+		font-size: 13px;
+		color: var(--muted);
+	}
+
+	/* Narrow screens keep both lanes side by side, just tighter. */
+	@container (max-width: 30rem) {
+		.lanes {
+			column-gap: 1rem;
+		}
+
+		.step {
+			gap: 0.5rem;
+		}
+
+		.card {
+			padding: 0.5rem 0.6rem 0.55rem;
+		}
+
+		.step-title {
+			font-size: 14px;
+		}
+
+		.detail,
+		.empty {
+			font-size: 12.5px;
+		}
+
+		.empty {
+			padding-left: calc(var(--rail-x) * 2 + 0.5rem);
+		}
+	}
+</style>
+
+<script>
+	const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+	// The slowest lane rests for this share of its travel time before every
+	// lane sets off again together, so the race replays from a clean start.
+	const REST = 0.4;
+	// Share of the cycle spent fading everything back before the next run.
+	const RESET = 0.06;
+	const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)';
+	const IDLE_DOT = { backgroundColor: '#fff', borderColor: '#c4c4c4' };
+	const LIT_DOT = { backgroundColor: '#222', borderColor: '#222' };
+
+	document.querySelectorAll<HTMLElement>('.flow').forEach((flow) => {
+		const rails = [...flow.querySelectorAll<HTMLElement>('.rail')];
+		let animations: Animation[] = [];
+		let visible = false;
+
+		// Run the line from the lane's first dot to its last, and remember where
+		// each dot sits along it.
+		function measure() {
+			return rails.map((rail) => {
+				const lane = rail.dataset.lane;
+				const top = rail.getBoundingClientRect().top;
+				const dots = [
+					...flow.querySelectorAll<HTMLElement>(
+						`.step[data-lane="${lane}"] .dot`,
+					),
+				].map((dot) => {
+					const box = dot.getBoundingClientRect();
+					return { dot, y: box.top + box.height / 2 - top };
+				});
+				const start = dots[0].y;
+				const length = dots[dots.length - 1].y - start;
+				const line = rail.querySelector<HTMLElement>('.line')!;
+				line.style.top = `${start}px`;
+				line.style.bottom = 'auto';
+				line.style.height = `${length}px`;
+				return { rail, dots, start, length, pulse: Number(rail.dataset.pulse) };
+			});
+		}
+
+		function play() {
+			animations.forEach((animation) => animation.cancel());
+			animations = [];
+			const lanes = measure();
+			if (reducedMotion.matches) return;
+
+			const pulsing = lanes.filter((lane) => lane.pulse > 0 && lane.length > 0);
+			if (!pulsing.length) return;
+			const cycle =
+				Math.max(...pulsing.map((lane) => lane.pulse)) * (1 + REST) * 1000;
+			const timing = { duration: cycle, iterations: Infinity };
+			const fadeFrom = 1 - RESET;
+
+			for (const { rail, dots, start, length, pulse } of pulsing) {
+				const arrive = (pulse * 1000) / cycle;
+				const comet = rail.querySelector<HTMLElement>('.comet')!;
+				const tail = comet.offsetHeight;
+
+				// Constant speed down the line, so the faster lane is plainly faster.
+				animations.push(
+					comet.animate(
+						[
+							{ offset: 0, transform: `translateY(${-tail}px)`, opacity: 1 },
+							{
+								offset: arrive,
+								transform: `translateY(${length - tail}px)`,
+								opacity: 1,
+							},
+							{ offset: Math.min(arrive + 0.001, 1), opacity: 0 },
+							{ offset: 1, opacity: 0 },
+						],
+						timing,
+					),
+				);
+
+				// Each dot lights as the comet's head reaches it and stays lit, so the
+				// lane fills in like a progress bar.
+				for (const { dot, y } of dots) {
+					const at = ((y - start) / length) * arrive;
+					animations.push(
+						dot.animate(
+							[
+								{ offset: 0, ...IDLE_DOT },
+								{ offset: at, ...IDLE_DOT },
+								{ offset: Math.min(at + 0.015, fadeFrom), ...LIT_DOT },
+								{ offset: fadeFrom, ...LIT_DOT },
+								{ offset: 1, ...IDLE_DOT },
+							],
+							timing,
+						),
+					);
+				}
+
+				// The result frame develops when the pulse lands.
+				const fill = flow.querySelector<HTMLElement>(
+					`.result[data-lane="${rail.dataset.lane}"] .frame-fill`,
+				)!;
+				animations.push(
+					fill.animate(
+						[
+							{ offset: 0, opacity: 0, transform: 'scale(0.9)' },
+							{
+								offset: arrive,
+								opacity: 0,
+								transform: 'scale(0.9)',
+								easing: EASE_OUT,
+							},
+							{
+								offset: Math.min(arrive + 0.08, fadeFrom),
+								opacity: 1,
+								transform: 'scale(1)',
+							},
+							{ offset: fadeFrom, opacity: 1, transform: 'scale(1)' },
+							{ offset: 1, opacity: 0, transform: 'scale(0.9)' },
+						],
+						timing,
+					),
+				);
+			}
+
+			if (!visible) animations.forEach((animation) => animation.pause());
+		}
+
+		// Bars grow once, the first time the panel comes into view.
+		function growBars() {
+			if (reducedMotion.matches) return;
+			flow.querySelectorAll<HTMLElement>('.bars li').forEach((item, i) => {
+				item
+					.querySelector('.bar')!
+					.animate([{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }], {
+						duration: 700,
+						delay: i * 80,
+						easing: EASE_OUT,
+						fill: 'backwards',
+					});
+				item.querySelector('.bar-value')!.animate(
+					[
+						{ opacity: 0, transform: 'translateY(4px)' },
+						{ opacity: 1, transform: 'none' },
+					],
+					{
+						duration: 300,
+						delay: 350 + i * 80,
+						easing: EASE_OUT,
+						fill: 'backwards',
+					},
+				);
+			});
+		}
+
+		let started = false;
+		new IntersectionObserver(
+			([entry]) => {
+				visible = entry.isIntersecting;
+				if (visible && !started) {
+					started = true;
+					play();
+					growBars();
+					return;
+				}
+				// Pause and resume together so the lanes stay in sync.
+				animations.forEach((animation) =>
+					visible ? animation.play() : animation.pause(),
+				);
+			},
+			{ threshold: 0.3 },
+		).observe(flow);
+
+		// Line lengths depend on layout, so restart from scratch after a resize.
+		let frame = 0;
+		new ResizeObserver(() => {
+			if (!started) return measure();
+			cancelAnimationFrame(frame);
+			frame = requestAnimationFrame(play);
+		}).observe(flow);
+
+		reducedMotion.addEventListener('change', play);
+	});
+</script>

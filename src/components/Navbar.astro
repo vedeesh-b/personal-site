@@ -1,9 +1,15 @@
 ---
+import { Image } from 'astro:assets';
+import { profile } from '../data/profile';
+import portrait from '../assets/portrait-spiderverse.png';
+
 interface NavbarLink {
 	title: string;
 	id: string;
 	newUpdate: boolean;
 	href: string;
+	/** When to prefetch the page. Defaults to on hover (astro.config.mjs). */
+	prefetch?: 'viewport';
 }
 
 const navbarLinks: NavbarLink[] = [
@@ -30,27 +36,76 @@ const navbarLinks: NavbarLink[] = [
 		id: 'guestbook',
 		newUpdate: false,
 		href: '/guestbook',
+		// Rendered on demand: wake its server function early.
+		prefetch: 'viewport',
 	},
 ];
+
+// A link is active on its own page and on any page below it, so Projects
+// stays underlined on /projects/<slug>.
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
 ---
 
 <div id="navbar">
-	<div id="branding">
-		<div id="headshot"></div>
-		<div id="branding-content">
-			<div class="name">Vedeesh Bali</div>
-			<div class="role">Product Engineer</div>
+	<a id="branding" href="/">
+		<div id="headshot">
+			<!-- Decorative: the name sits right beside it. Zoomed 1.5x inside the
+			     48px circle, so it's sized as a 72px image (up to 3x screens). -->
+			<Image
+				src={portrait}
+				alt=""
+				width={72}
+				height={72}
+				widths={[72, 144, 216]}
+				sizes="72px"
+				loading="eager"
+			/>
 		</div>
-	</div>
+		<div id="branding-content">
+			<div class="name">{profile.name}</div>
+			<div class="role">{profile.role}</div>
+		</div>
+	</a>
 	<div id="navbar-links">
 		{
 			navbarLinks.map((link) => (
-				<a href={link.href} class="navbar-item">
+				<a
+					href={link.href}
+					class="navbar-item"
+					aria-current={isActive(link.href) ? 'page' : undefined}
+					data-astro-prefetch={link.prefetch}
+				>
 					{link.title}
+					<span class="underline" aria-hidden="true" />
 				</a>
 			))
 		}
 	</div>
+	<!-- Phones: the links move into a popover, which closes itself on Escape,
+	     an outside tap, or (being a full page load) navigating. -->
+	<button
+		class="menu-toggle"
+		type="button"
+		popovertarget="mobile-menu"
+		aria-label="Menu"
+	>
+		<span class="bar" aria-hidden="true"></span>
+		<span class="bar" aria-hidden="true"></span>
+	</button>
+	<nav id="mobile-menu" popover aria-label="Pages">
+		{
+			navbarLinks.map((link) => (
+				<a
+					href={link.href}
+					aria-current={isActive(link.href) ? 'page' : undefined}
+					data-astro-prefetch={link.prefetch}
+				>
+					{link.title}
+				</a>
+			))
+		}
+	</nav>
 </div>
 
 <style>
@@ -80,8 +135,52 @@ const navbarLinks: NavbarLink[] = [
 		display: flex;
 		flex-direction: row;
 		justify-content: space-between;
-		padding: 1.5rem 8rem;
+		padding: var(--page-padding-y) var(--page-padding-x);
 		align-items: center;
+	}
+
+	.navbar-item {
+		position: relative;
+	}
+
+	.navbar-item[aria-current='page'] {
+		color: #111;
+	}
+
+	/* A real element rather than ::after, so the active one can carry a
+	   view-transition-name and slide to the next page's active link. It's
+	   the only thing in the navbar that moves between pages. */
+	.underline {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: -4px;
+		height: 1.5px;
+		border-radius: 1px;
+		background-color: currentColor;
+		scale: 0 1;
+		transform-origin: left;
+		transition:
+			scale 250ms var(--ease-out),
+			opacity 250ms var(--ease-out);
+	}
+
+	.navbar-item[aria-current='page'] .underline {
+		scale: 1 1;
+		view-transition-name: nav-underline;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.navbar-item:not([aria-current]):hover .underline {
+			scale: 1 1;
+			opacity: 0.25;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.underline {
+			transition: none;
+		}
 	}
 
 	#navbar-links {
@@ -105,7 +204,148 @@ const navbarLinks: NavbarLink[] = [
 	#headshot {
 		width: 48px;
 		height: 48px;
+		flex-shrink: 0;
 		border-radius: 100%;
+		overflow: hidden;
 		background-color: #f6efe4;
 	}
+
+	/* The portrait is a wide shot, so zoom in on the face. */
+	#headshot img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transform-origin: 53% 42%;
+	}
+
+	.menu-toggle {
+		display: none;
+	}
+
+	@media (max-width: 639px) {
+		#navbar-links {
+			display: none;
+		}
+
+		.menu-toggle {
+			position: relative;
+			display: block;
+			width: var(--tap-target);
+			height: var(--tap-target);
+			/* Line the icon up with the page edge, not the button's. */
+			margin-right: calc((var(--tap-target) - 20px) / -2);
+			padding: 0;
+			border: 0;
+			background: none;
+			color: #111;
+			cursor: pointer;
+			-webkit-tap-highlight-color: transparent;
+		}
+
+		/* Two bars that cross into an X while the menu is open. */
+		.bar {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			width: 20px;
+			height: 1.5px;
+			margin: -0.75px 0 0 -10px;
+			border-radius: 1px;
+			background-color: currentColor;
+			translate: 0 -3.5px;
+			transition:
+				translate 250ms var(--ease-out),
+				rotate 250ms var(--ease-out);
+		}
+
+		.bar + .bar {
+			translate: 0 3.5px;
+		}
+
+		#navbar:has(#mobile-menu:popover-open) .bar {
+			translate: 0 0;
+			rotate: 45deg;
+		}
+
+		#navbar:has(#mobile-menu:popover-open) .bar + .bar {
+			rotate: -45deg;
+		}
+
+		/* Drops down from under the navbar (the script sets its top), and
+		   scrolls away with it. */
+		#mobile-menu {
+			position: absolute;
+			inset: 0 0 auto;
+			width: auto;
+			margin: 0;
+			padding: var(--space-xs) var(--gutter) var(--space-l);
+			border: 0;
+			border-bottom: 1px solid #eee;
+			background-color: #fff;
+			flex-direction: column;
+			opacity: 0;
+			translate: 0 -8px;
+			transition:
+				opacity 200ms var(--ease-out),
+				translate 200ms var(--ease-out),
+				display 200ms allow-discrete,
+				overlay 200ms allow-discrete;
+		}
+
+		#mobile-menu:popover-open {
+			display: flex;
+			opacity: 1;
+			translate: 0 0;
+		}
+
+		@starting-style {
+			#mobile-menu:popover-open {
+				opacity: 0;
+				translate: 0 -8px;
+			}
+		}
+
+		#mobile-menu::backdrop {
+			background-color: rgb(0 0 0 / 0.06);
+		}
+
+		#mobile-menu a {
+			display: flex;
+			align-items: center;
+			min-height: var(--tap-target);
+			font-size: var(--text-lg);
+			letter-spacing: var(--tracking-tight);
+		}
+
+		#mobile-menu a[aria-current='page'] {
+			color: #111;
+			font-weight: 500;
+		}
+	}
+
+	/* Resized past the breakpoint while open: the links are back in the bar. */
+	@media (min-width: 640px) {
+		#mobile-menu:popover-open {
+			display: none;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.bar,
+		#mobile-menu {
+			transition: none;
+		}
+	}
 </style>
+
+<script>
+	const navbar = document.getElementById('navbar')!;
+	const menu = document.getElementById('mobile-menu')!;
+
+	// Open just under the navbar, wherever the page is scrolled to.
+	menu.addEventListener('beforetoggle', (event) => {
+		if ((event as ToggleEvent).newState !== 'open') return;
+		menu.style.top = `${navbar.getBoundingClientRect().bottom + scrollY}px`;
+	});
+</script>

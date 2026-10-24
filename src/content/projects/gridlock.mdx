@@ -1,0 +1,369 @@
+---
+title: Fostering a sense of community among F1 fans with GridLock
+description: I built a digital bingo card for my fellow F1 fans’ predictions for the 2026 season. Small upgrade from the Notes app.
+order: 2
+cover: ../../assets/projects/gridlock/cover.png
+coverAlt: 'GridLock wordmark on a dark dotted grid'
+coverVideo: ../../assets/projects/gridlock/cover.mp4
+video: ../../assets/projects/gridlock/video.mp4
+tags: [Development, Authentication, Q4—2025]
+summary:
+  intro: Building a digital F1-themed predictions bingo card web app.
+  context: My friends and I had a mini predictions championship for the 2025 F1 season. This was based out of the Notes Apps on our phones, but I figured I could build something more interesting.
+  problem: An invite-only app that turns 16 free-text predictions into a structured, scoreable card, locked in before lights out.
+---
+
+import ferrari from '../../assets/projects/gridlock/ferrari.webp';
+import gasly from '../../assets/projects/gridlock/gasly.jpg';
+import hamilton from '../../assets/projects/gridlock/hamilton.png';
+
+## DIY Predictions Championship
+
+For the 2025 season, every one of us wrote our predictions in the Notes app and dropped them into the group chat. It worked well enough until the end of the season, when we had to actually score them.
+
+<Alert variant="error" title="Issues caused by this">
+
+- There was no single source of truth. Predictions lived across a dozen screenshots buried in months of chat history.
+- Nothing stopped a vague prediction. _"Someone crashes out in the wet"_ is impossible to settle when everyone remembers it differently.
+- Nothing was locked. A note can be quietly edited mid-season, and a screenshot only proves what it looked like on the day it was taken.
+
+</Alert>
+
+The format itself was okay - writing a list of bullet points is quick and convenient. What was missing was structure, validation and a layer of visibility across everyone's predictions.
+
+## Adding Structure to the Freedom of Notes
+
+The standard approach here would be a form: 16 input fields, a dropdown per tier and a submit button. It would have been easy to validate, but it would have turned a fun, opinionated ritual into data entry. People need the freedom and space to marinate on their predictions, so a plain form might have been too constraining.
+
+Instead, I kept the text-first format and built the structure underneath it. The card editor is a lightweight code editor (built using `react-simple-code-editor`) with a custom Prism grammar, so tier headers, comments and predictions each get their own highlighting:
+
+```text
+// TIER 1: Expected. [1 point]
+- Max Verstappen wins in Suzuka
+- ...
+
+// TIER 4: No way fam. [6 points]
+- Nico Hülkenberg earns his first career podium
+- ...
+```
+
+Each tier header carries an actual example based on drivers' and teams' history, so the scale of _'expected'_ versus _'no way'_ is set by our own history instead of a rules page.
+
+<CardGrid
+	title="Points System"
+	description="How much each tier is worth, along with real moments from the 2025 season serving as examples for each tier."
+	cards={[
+		{
+			title: 'Tier 1: Expected',
+			badge: '+1 point',
+			body: '2025 Example: Jack Doohan gets replaced mid-season.',
+		},
+		{
+			title: 'Tier 2: Reasonable',
+			badge: '+2 points',
+			body: '2025 Example: A rookie crashes out in Australia.',
+		},
+		{
+			title: "Tier 3: Now We're Talking",
+			badge: '+4 points',
+			body: '2025 Example: Lance Stroll exits in Q1 >40% of the time.',
+		},
+		{
+			title: 'Tier 4: No Way Fam',
+			badge: '+6 points',
+			body: '2025 Example: Nico Hülkenberg gets a podium.',
+		},
+	]}
+	caption="Four predictions per tier, so a perfect card is worth 52 points. The non-linear jump rewards bold calls over safe ones."
+/>
+
+## Turning Free Text into a Card
+
+A custom parser reads the editor line by line. `// TIER` headers switch the active tier, a hyphen bullet (`-`) starts a new prediction, and any other line is treated as a continuation of the previous one, so a long prediction can wrap naturally without breaking the format.
+
+Validation then runs as a set of game rules rather than form errors:
+
+1. **Exactly four per tier.** _"Tier 3 has 5 predictions. It must have exactly 4."_
+2. **No vague predictions.** Every prediction has to mention a driver, team principal, team or track, checked against a dictionary of 148 F1 keywords. Otherwise it's rejected as _"too vague."_
+
+The second rule solved last season's biggest argument at the point of entry. It also did a second job for free: the keyword it finds is mapped to a driver or team image, so every prediction on the finished card has a face next to it. One pass over the text gives me both the validation and the visuals.
+
+<EditorToCard
+	comment="TIER 3: Now we're talking. 2025 example: Lance Stroll failing to get out of Q1 >40% of the time. [4 points]"
+	prediction="Pierre Gasly finishes ahead of at least one Williams driver in the championship"
+	keyword="Gasly"
+	tier={3}
+	points={4}
+	image={gasly}
+	imageAlt="Pierre Gasly in Alpine race overalls"
+	caption="The parser matches “gasly” in the keyword dictionary, which both validates the prediction and picks the photo on its card."
+/>
+
+## Invite-Only, Without Passwords
+
+This was built for a group of friends, so access was based on an invite-only mechanism. The usual options would have been an auth provider like Clerk or NextAuth with Google sign-in. However, it felt a bit unnecessary for my users to create a password for a product they'd use maybe two or three times a year.
+
+Instead, I built a passwordless flow based on an allowlist.
+
+<ArchitectureDiagram
+	title="System Architecture"
+	width={760}
+	height={400}
+	groups={[{ title: 'Vercel · Next.js 16', x: 220, y: 20, w: 290, h: 280 }]}
+	nodes={[
+		{
+			id: 'browser',
+			title: 'Browser',
+			tech: 'React 19',
+			x: 16,
+			y: 100,
+			w: 128,
+			h: 64,
+		},
+		{
+			id: 'pages',
+			title: 'Server components',
+			tech: 'Route guards · jose JWT',
+			x: 246,
+			y: 50,
+			w: 230,
+			h: 64,
+		},
+		{
+			id: 'actions',
+			title: 'Server actions',
+			tech: 'OTP · session · predictions',
+			x: 246,
+			y: 150,
+			w: 230,
+			h: 64,
+		},
+		{
+			id: 'neon',
+			title: 'Neon Postgres',
+			tech: 'Serverless driver',
+			kind: 'store',
+			lines: ['allowed_users', 'otp_codes', 'users', 'predictions'],
+			x: 580,
+			y: 30,
+			w: 164,
+			h: 190,
+		},
+		{
+			id: 'gmail',
+			title: 'Gmail SMTP',
+			tech: 'via Nodemailer',
+			x: 580,
+			y: 250,
+			w: 164,
+			h: 56,
+		},
+		{
+			id: 'dicebear',
+			title: 'DiceBear',
+			tech: 'Pitwall avatars',
+			x: 580,
+			y: 330,
+			w: 164,
+			h: 56,
+		},
+	]}
+	edges={[
+		{ from: 'browser', to: 'pages', fromOffset: -12 },
+		{ from: 'browser', to: 'actions', fromOffset: 12 },
+		{ from: 'pages', to: 'neon', label: 'reads' },
+		{ from: 'actions', to: 'neon', label: 'writes' },
+		{
+			from: 'actions',
+			to: 'gmail',
+			fromSide: 'bottom',
+			label: 'one-time code',
+			labelX: 435,
+		},
+		{ from: 'browser', to: 'dicebear', fromSide: 'bottom', label: 'avatars' },
+	]}
+	caption="Everything inside the boundary deploys as a single Next.js app. Postgres holds the allowlist, the codes, the users and their cards."
+/>
+
+- When a user attempts to sign up to the platform, their email is checked against a predefined `allowed_users` table in Neon. Whether or not it's on the list, the response is identical, so the list can't be probed to find out who's in it.
+- If it is on the list, a six-digit code is emailed through Nodemailer. Codes expire after 15 minutes and are marked as used on verification to prevent replays.
+- A successful code signs a JWT (`jose`) into an `httpOnly` cookie with a one-year expiry. The championship runs for a full season, so nobody should have to log in again mid-way through.
+
+<SequenceDiagram
+	title="Sign-in Journey"
+	participants={[
+		{ id: 'browser', title: 'Browser', tech: 'React 19' },
+		{ id: 'server', title: 'Next.js server', tech: 'Vercel' },
+		{ id: 'neon', title: 'Neon', tech: 'Postgres' },
+		{ id: 'gmail', title: 'Gmail', tech: 'SMTP' },
+	]}
+	steps={[
+		{ phase: 'Request a code' },
+		{ from: 'browser', to: 'server', label: 'requestOtp(email)' },
+		{
+			from: 'server',
+			to: 'neon',
+			label: 'SELECT allowed_users',
+			detail: 'is this email invited?',
+		},
+		{
+			from: 'server',
+			to: 'neon',
+			label: 'INSERT otp_codes',
+			detail: 'only if listed · 15 min expiry',
+		},
+		{
+			from: 'server',
+			to: 'gmail',
+			label: 'sendMail(code)',
+			detail: 'six digits, only if listed',
+		},
+		{
+			from: 'server',
+			to: 'browser',
+			label: '200 OK',
+			detail: 'same message, listed or not',
+			reply: true,
+		},
+		{ phase: 'Verify the code' },
+		{ from: 'browser', to: 'server', label: 'verifyOtp(email, code)' },
+		{
+			from: 'server',
+			to: 'neon',
+			label: 'SELECT otp_codes',
+			detail: 'matching, unused, unexpired',
+		},
+		{
+			from: 'server',
+			to: 'neon',
+			label: 'UPDATE used = TRUE',
+			detail: 'then get or create the user',
+		},
+		{
+			from: 'server',
+			to: 'browser',
+			label: 'Set-Cookie: session_token',
+			detail: 'JWT · httpOnly · 1 year',
+			reply: true,
+		},
+		{ phase: 'Every page load' },
+		{
+			from: 'browser',
+			to: 'server',
+			label: 'GET /any-page',
+			detail: 'cookie attached',
+		},
+		{
+			from: 'server',
+			to: 'server',
+			label: 'jwtVerify(token)',
+			detail: 'no valid session → /',
+		},
+		{
+			from: 'server',
+			to: 'neon',
+			label: 'SELECT predictions',
+			detail: 'does a card exist?',
+		},
+		{
+			from: 'server',
+			to: 'browser',
+			label: 'render or redirect',
+			detail: 'see the routing table below',
+			reply: true,
+		},
+	]}
+	caption="Solid arrows are calls, dashed arrows are responses. Every check runs on the server before any HTML is sent."
+/>
+
+Every page is a server component that reads the session before rendering, so routing is decided on the server. Signed-out users land on the login page, users without a card are sent to the editor, and users with one go straight to their predictions.
+
+<Table
+	columns={[
+		'Route',
+		'Signed out',
+		'Signed in, no card',
+		'Signed in, card locked',
+	]}
+	rows={[
+		['/', 'Login', '→ /create-card', '→ /view-predictions'],
+		['/validate-otp', 'Code form', '→ /create-card', '→ /view-predictions'],
+		['/create-card', '→ /', 'Card editor', '→ /view-predictions'],
+		['/view-predictions', '→ /', 'Link to the editor', 'Your card'],
+		['/pitwall', '→ /', '→ /create-card', 'Submitted cards'],
+	]}
+	caption="Routing decided on the server for each request. → marks a redirect."
+/>
+
+## Locking It In
+
+Once a card is submitted, the editor route redirects away for that user, so predictions can't be revisited after the fact. That one rule replaced the honour system of the Notes app.
+
+The Pitwall page then shows the card of every player who has locked theirs in. It reads from the `predictions` table, so anyone who hasn't submitted yet simply doesn't appear, and the allowlist is only used to look up display names. It's also locked until you've submitted your own card, so nobody can borrow inspiration from someone else's predictions or deliberately copy them. Last season, comparing predictions meant scrolling back through the group chat. Now it's one page.
+
+## Making It Feel Like F1
+
+Since the point was to make the championship more fun, I spent time on the moments around the core flow:
+
+- **Lights out.** The first visit in a session plays the F1 start sequence: five red lights come on one by one, hold, then go out to reveal the logo. It's tracked in `sessionStorage` so it never gets in the way twice.
+- **Draggable photos.** The login page has photos from races I've been to, as tilted cards with spring physics (`motion`) that you can pick up and throw around.
+- **Tone of voice.** _"Enter paddock"_ on the login button, _"Yep, we're that selective"_ under the email field, _"Rolling you out to the grid"_ on success, and _"Lock them in"_ to submit.
+
+## tldr;
+
+<Table
+	columns={['', 'Notes app', 'GridLock']}
+	emphasis={2}
+	rows={[
+		['Where predictions live', 'Screenshots in a group chat', 'Postgres table'],
+		['Vague predictions', 'Argued about at the end', 'Rejected on submit'],
+		['Editing after the fact', 'Anyone, anytime', 'Locked once submitted'],
+		['Comparing cards', 'Scroll the chat', 'Pitwall page'],
+		['Access', 'Whoever is in the chat', 'Allowlist + one-time code'],
+	]}
+/>
+
+## Takeaways
+
+The key decision on this project was to not replace a behaviour people already had. A form would have been simpler to build, but the editor kept the part of the Notes app everyone liked and quietly added the rules we were missing.
+
+There are a few things I'd change next season:
+
+1. **Automatic tracking for quantitative predictions.** Something like _"Carlos Sainz beats Lewis Hamilton in the standings"_ can be settled by data instead of memory. Parsing these into a structured rule (two drivers, a comparison, a source) and checking it against a public F1 results API after each race would keep a live score without anyone having to tally it at the end.
+
+<TrackedPrediction
+	tier={4}
+	points={6}
+	prediction="Carlos Sainz beats Lewis Hamilton in the final standings"
+	image={hamilton}
+	imageAlt="Lewis Hamilton in Mercedes race overalls"
+	imagePosition="center 20%"
+	drivers={[
+		{
+			name: 'Lewis Hamilton',
+			color: '#f03e3e',
+			positions: [6, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+		},
+		{
+			name: 'Carlos Sainz',
+			color: '#4c6ef5',
+			positions: [
+				18, 17, 16, 17, 17, 17, 14, 12, 14, 15, 15, 15, 16, 17, 18, 18, 18, 18,
+			],
+		},
+	]}
+	status="Sainz needs to outscore Hamilton by 223 points over the next 6 rounds to finish ahead."
+	caption="A concept: each prediction tracked against the standings after every round. Sample data."
+/>
+
+2. **Voting on qualitative predictions.** _"Ferrari bring out the most disappointing special livery of the season"_ is never going to be settled by an API. Letting players vote once the moment has passed, with a majority deciding, keeps those predictions in play without one person acting as judge.
+
+<VotedPrediction
+	tier={1}
+	points={1}
+	prediction="Ferrari bring out the most disappointing special livery of the season"
+	image={ferrari}
+	imageAlt="Ferrari team crest"
+	highlights={[{ text: 'Ferrari', color: '#f03e3e' }]}
+	caption="A concept: once the moment has passed, everyone votes on whether it came true. Try it, your vote isn't saved."
+/>

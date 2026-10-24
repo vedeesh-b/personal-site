@@ -1,0 +1,38 @@
+---
+import { getCollection } from 'astro:content';
+import FeedCard from '../cards/FeedCard.astro';
+import { videoUrl } from '../../lib/projectVideos';
+
+const { snippet } = Astro.props;
+
+const projects = (await getCollection('projects')).sort(
+	(a, b) => a.data.order - b.data.order,
+);
+const visiblePosts = snippet ? projects.slice(0, 2) : projects;
+---
+
+<div id="feed-list">
+	{
+		visiblePosts.map((project) => (
+			<FeedCard
+				href={`/projects/${project.id}`}
+				title={project.data.title}
+				description={project.data.description}
+				imgSrc={project.data.cover}
+				alt={project.data.coverAlt ?? ''}
+				videoSrc={videoUrl(project.data.coverVideo)}
+				transitionName={`project-${project.id}`}
+			/>
+		))
+	}
+</div>
+
+<style>
+	#feed-list {
+		display: grid;
+		/* As many 20rem-plus columns as fit (two on desktop), down to one. */
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+		column-gap: var(--space-2xl);
+		row-gap: 2.5rem;
+	}
+</style>

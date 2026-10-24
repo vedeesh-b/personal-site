@@ -1,0 +1,15 @@
+---
+import Post from "../cards/Post.astro";
+---
+<div class="posts">
+<Post date="14 April 2026" content="Hello" />
+<Post date="14 April 2026" content="Hello" />
+</div>
+
+<style>
+    .posts {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+</style>

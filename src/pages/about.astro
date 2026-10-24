@@ -1,0 +1,209 @@
+---
+import { Image } from 'astro:assets';
+import portrait from '../assets/portrait.jpeg';
+import Carousel from '../components/ui/Carousel.astro';
+import PossessionsGrid from '../components/ui/PossessionsGrid.astro';
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="About" description="How Vedeesh Bali, a product engineer, got into design, plus travels and prized possessions.">
+	<main>
+		<section>
+			<h1 style="view-transition-name: page-title">About</h1>
+			<div class="about-container">
+				<div class="about-text">
+					<p>
+						I think of myself as an engineer with a keen interest in design. My
+						background is in software engineering, and my fascination with the
+						taste required to build great products led me to user experience and
+						product growth.
+					</p>
+					<p>
+						I’ve been fortunate to work on some cool things, like building a
+						design system from scratch and working on automation tooling for
+						complex authentication workflows. My personal projects span across
+						custom component libraries, consumer tools, and sports data
+						analytics.
+					</p>
+				</div>
+				<div class="about-img">
+					<div class="portrait" id="about-portrait">
+						<Image
+							src={portrait}
+							alt="Black-and-white portrait of Vedeesh, smiling, in a dark t-shirt"
+							widths={[400, 640, 960, 1280]}
+							sizes="(max-width: 1023px) min(calc(100vw - 2.5rem), 24rem), 20rem"
+							loading="eager"
+						/>
+					</div>
+				</div>
+			</div>
+		</section>
+		<Carousel />
+		<section>
+			<h4>Prized Possessions</h4>
+			<PossessionsGrid />
+		</section>
+	</main>
+</Layout>
+
+<style>
+	main {
+		box-sizing: border-box;
+		padding: var(--page-padding-y) var(--page-padding-x);
+		display: flex;
+		flex-direction: column;
+		gap: var(--section-gap);
+	}
+
+	h1 {
+		font-size: var(--text-xl);
+		margin-top: 0.25em;
+		padding-bottom: 0.5em;
+		font-weight: 500;
+		color: #111;
+		letter-spacing: var(--tracking-tight);
+	}
+
+	h4 {
+		font-family: var(--font-mono);
+		font-size: 13px;
+		font-weight: 500;
+		text-transform: uppercase;
+		padding-bottom: 1.4rem;
+		color: #545454;
+	}
+
+	.about-container {
+		display: flex;
+		justify-content: space-between;
+	}
+
+	.about-text {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+		max-width: 50%;
+		font-size: var(--text-md);
+		letter-spacing: -0.5px;
+	}
+
+	/* The text sets the container's height. The wrapper stretches to it, and
+	   the 4:5 portrait takes its width from that height. Positioned absolutely
+	   so the portrait adds nothing to the height it's measuring. */
+	.about-img {
+		position: relative;
+		flex: 1;
+	}
+
+	.portrait {
+		position: absolute;
+		inset-block: 0;
+		right: 0;
+		height: 100%;
+		aspect-ratio: 4 / 5;
+		overflow: hidden;
+		border-radius: 4px;
+		background-color: #d9d9d9;
+	}
+
+	/* Starts zoomed in and settles to its real size as the page scrolls
+	   down (see the script). Zoomed around the face, not the middle. */
+	.portrait img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transform-origin: 50% 40%;
+		scale: var(--zoom, 1.15);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.portrait img {
+			scale: 1;
+		}
+	}
+
+	/* Too narrow for two columns: the text would get tall and the portrait,
+	   matching it, would grow over it. Stack them, with the portrait at its
+	   own size. */
+	@media (max-width: 1023px) {
+		.about-container {
+			flex-direction: column;
+			gap: var(--space-xl);
+		}
+
+		.about-text {
+			max-width: var(--measure);
+		}
+
+		.about-img {
+			position: static;
+		}
+
+		.portrait {
+			position: static;
+			width: 100%;
+			max-width: 24rem;
+			height: auto;
+		}
+	}
+</style>
+
+<script>
+	// The portrait starts at ZOOM and scales down to its real size over the
+	// scroll from when it's first in view to when it has left the top of the
+	// screen. Scrolling back up zooms it in again.
+	const ZOOM = 1.15;
+	// Share of the remaining distance covered per 60fps frame: smooths out
+	// mouse-wheel steps without feeling detached from the scroll.
+	const SMOOTHING = 0.15;
+	const FRAME = 1000 / 60;
+
+	const frame = document.getElementById('about-portrait');
+	const img = frame?.querySelector('img');
+	const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+
+	if (frame && img) {
+		let current = -1;
+		let raf = 0;
+		let last = 0;
+
+		const target = () => {
+			const rect = frame.getBoundingClientRect();
+			const top = rect.top + scrollY;
+			// Already in view on load counts as starting from the top.
+			const start = Math.max(0, top - innerHeight);
+			const end = top + rect.height;
+			const progress = Math.min(
+				1,
+				Math.max(0, (scrollY - start) / (end - start)),
+			);
+			return ZOOM - (ZOOM - 1) * progress;
+		};
+
+		const step = (now: number) => {
+			const goal = target();
+			if (current < 0) {
+				current = goal;
+			} else {
+				// Frame-rate independent: the same feel at 60Hz and 120Hz.
+				const t = 1 - Math.pow(1 - SMOOTHING, (now - last) / FRAME);
+				current += (goal - current) * t;
+			}
+			last = now;
+			img.style.setProperty('--zoom', current.toFixed(4));
+			raf = Math.abs(goal - current) > 0.0005 ? requestAnimationFrame(step) : 0;
+		};
+
+		const update = () => {
+			if (reducedMotion.matches || raf) return;
+			last = performance.now();
+			raf = requestAnimationFrame(step);
+		};
+
+		addEventListener('scroll', update, { passive: true });
+		addEventListener('resize', update);
+		update();
+	}
+</script>

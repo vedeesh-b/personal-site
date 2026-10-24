@@ -1,0 +1,150 @@
+---
+import { Send } from '@lucide/astro';
+import { actions, isInputError } from 'astro:actions';
+import { LIMITS } from '../../actions';
+import Sticky from './Sticky.astro';
+
+// Set when this request is the form's own submission (without JS) and it
+// failed. With JS, the page's script submits it and shows errors itself.
+const result = Astro.getActionResult(actions.signGuestbook);
+const fieldErrors = isInputError(result?.error) ? result.error.fields : {};
+const error =
+	fieldErrors.message?.[0] ??
+	fieldErrors.name?.[0] ??
+	fieldErrors.social?.[0] ??
+	(result?.error?.code === 'CONFLICT' ||
+	result?.error?.code === 'TOO_MANY_REQUESTS'
+		? result.error.message
+		: result?.error
+			? 'Something went wrong. Try again?'
+			: null);
+---
+
+<Sticky
+	as="form"
+	id="note-form"
+	paper="yellow"
+	tilt={-1}
+	method="POST"
+	action={actions.signGuestbook}
+	aria-label="Leave a note"
+>
+	<textarea
+		name="message"
+		placeholder="Leave a message!"
+		aria-label="Message"
+		required
+		maxlength={LIMITS.message}></textarea>
+	<div class="fields">
+		<input
+			name="name"
+			placeholder="Name"
+			aria-label="Name"
+			autocomplete="name"
+			required
+			maxlength={LIMITS.name}
+		/>
+		<input
+			name="social"
+			placeholder="Social link (optional)"
+			aria-label="Social link"
+			autocomplete="url"
+			maxlength={LIMITS.social}
+		/>
+		<p class="error" role="alert">{error}</p>
+	</div>
+	<!-- Spam traps: see the signGuestbook action. -->
+	<div class="trap" aria-hidden="true">
+		<input name="website" tabindex="-1" autocomplete="off" />
+	</div>
+	<input type="hidden" name="started" value={Date.now()} />
+	<button type="submit">
+		<span>Submit</span>
+		<Send size={16} aria-hidden="true" />
+	</button>
+</Sticky>
+
+<style>
+	textarea,
+	input {
+		box-sizing: border-box;
+		width: 100%;
+		font: inherit;
+		color: inherit;
+		background: rgb(255 255 255 / 0.35);
+		border: 1px solid rgb(0 0 0 / 0.12);
+		border-radius: 6px;
+		padding: 0.25rem 0.6rem;
+	}
+
+	textarea {
+		flex: 1;
+		min-height: 0;
+		resize: none;
+	}
+
+	textarea::placeholder,
+	input::placeholder {
+		color: rgb(31 41 55 / 0.55);
+	}
+
+	textarea:focus-visible,
+	input:focus-visible {
+		outline: 2px solid rgb(0 0 0 / 0.5);
+		outline-offset: 1px;
+	}
+
+	.fields {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.error {
+		margin: 0;
+		font-size: 17px;
+		color: #b91c1c;
+	}
+
+	.error:empty {
+		display: none;
+	}
+
+	.trap {
+		position: absolute;
+		left: -9999px;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+	}
+
+	/* Hangs off the bottom edge of the note. */
+	button {
+		position: absolute;
+		right: 1.5rem;
+		bottom: -1.25rem;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.6rem 1rem;
+		font-family: var(--font-sans);
+		font-size: 14px;
+		color: #fff;
+		background: #111;
+		border: 0;
+		border-radius: 8px;
+		cursor: pointer;
+		transition:
+			transform 150ms var(--ease-out),
+			opacity 150ms var(--ease-out);
+	}
+
+	button:active {
+		transform: scale(0.97);
+	}
+
+	button:disabled {
+		opacity: 0.6;
+		cursor: progress;
+	}
+</style>

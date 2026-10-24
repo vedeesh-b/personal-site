@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "storytelling-expert",
+  "owner": "ericgandrade",
+  "repo": "claude-superskills",
+  "path": "skills/storytelling-expert",
+  "branch": "main",
+  "sha": "f3ece29a8ab527b00dc6cb398e5d24a7803ddfd3",
+  "source": "manual"
+}

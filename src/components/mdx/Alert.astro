@@ -1,0 +1,123 @@
+---
+import { CircleAlert, FileText } from '@lucide/astro';
+
+/*
+ * Every alert type lives here. To add one, add an entry: its icon, the word
+ * screen readers hear before the alert, and its colours.
+ */
+const variants = {
+	note: {
+		icon: FileText,
+		label: 'Note',
+		colors: {
+			background: '#f3f6fa',
+			border: '#dde3ec',
+			text: '#3c4654',
+			icon: '#4a6a95',
+		},
+	},
+	error: {
+		icon: CircleAlert,
+		label: 'Error',
+		colors: {
+			background: '#f4d7d7',
+			border: '#c78f8f',
+			text: '#545454',
+			icon: '#bf1515',
+		},
+	},
+};
+
+interface Props {
+	variant?: keyof typeof variants;
+	title?: string;
+}
+
+const { variant = 'note', title } = Astro.props;
+const { icon: Icon, label, colors } = variants[variant];
+const style = [
+	`--alert-background: ${colors.background}`,
+	`--alert-border: ${colors.border}`,
+	`--alert-text: ${colors.text}`,
+	`--alert-icon: ${colors.icon}`,
+].join('; ');
+---
+
+{
+	/* A static callout, so role="note" rather than role="alert", which would interrupt screen readers. */
+}
+<aside class="alert" role="note" style={style}>
+	<span class="icon">
+		<Icon size={20} />
+	</span>
+	{title && <p class="title">{title}</p>}
+	<div class="body">
+		{
+			/* The icon is decorative, so the type is spelled out for screen readers. */
+		}
+		<span class="visually-hidden">{label}:</span>
+		<slot />
+	</div>
+</aside>
+
+<style>
+	/*
+	 * Two columns: the icon, then the text. The title shares the icon's row
+	 * and the body sits under the title in the same column. Without a title,
+	 * the body moves up into the icon's row.
+	 */
+	.alert {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		column-gap: 0.75rem;
+		row-gap: 0.35rem;
+		margin: 2rem 0;
+		padding: 1rem 1.25rem;
+		border: 1px solid var(--alert-border);
+		border-radius: 12px;
+		background-color: var(--alert-background);
+		color: var(--alert-text);
+		font-size: 15px;
+		line-height: 1.6;
+	}
+
+	/* One line tall, so the icon centres on the first line of text. */
+	.icon {
+		grid-column: 1;
+		grid-row: 1;
+		display: flex;
+		align-items: center;
+		height: 1lh;
+		color: var(--alert-icon);
+	}
+
+	.title {
+		grid-column: 2;
+		margin: 0;
+		font-weight: 500;
+		color: #111;
+	}
+
+	.body {
+		grid-column: 2;
+	}
+
+	/* Slotted Markdown brings the prose margins with it; trim the last one. */
+	.body > :global(:last-child) {
+		margin-bottom: 0;
+	}
+
+	.body :global(ul),
+	.body :global(ol) {
+		padding-left: 1.1rem;
+	}
+
+	.visually-hidden {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+</style>

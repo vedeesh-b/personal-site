@@ -1,0 +1,118 @@
+---
+import meta from '../../assets/halftone/meta.json';
+import poster400 from '../../assets/halftone/poster-400.webp?url';
+import poster640 from '../../assets/halftone/poster-640.webp?url';
+
+interface Props {
+	/** Leave out when the portrait is decorative. */
+	label?: string;
+	/** Follow the pointer with a lens that reveals the painting. */
+	interactive?: boolean;
+	/** Start blank; the caller grows it in with develop(). */
+	intro?: boolean;
+	/** The `sizes` attribute for the poster image. */
+	sizes?: string;
+	/** Load the poster first: it's the page's largest image (the home hero). */
+	priority?: boolean;
+	class?: string;
+}
+
+const {
+	label,
+	interactive = false,
+	intro = false,
+	sizes = '240px',
+	priority = false,
+	class: className,
+} = Astro.props;
+
+// Regenerate the source files with scripts/halftone-portrait/build.mjs.
+---
+
+<div
+	class:list={['halftone', className]}
+	role={label ? 'img' : undefined}
+	aria-label={label}
+	aria-hidden={label ? undefined : 'true'}
+	data-interactive={interactive ? '' : undefined}
+	data-intro={intro ? '' : undefined}
+	style={`aspect-ratio: ${meta.cols} / ${meta.rows}`}
+>
+	<!-- The resting frame, so the portrait shows before any JS runs. -->
+	<img
+		src={poster640}
+		srcset={`${poster400} 400w, ${poster640} 640w`}
+		sizes={sizes}
+		alt=""
+		decoding="async"
+		loading={priority ? 'eager' : 'lazy'}
+		fetchpriority={priority ? 'high' : undefined}
+	/>
+</div>
+
+<style>
+	.halftone {
+		position: relative;
+		user-select: none;
+		-webkit-user-select: none;
+	}
+
+	.halftone[data-interactive] {
+		/* Vertical swipes still scroll the page; anything else drives the lens. */
+		touch-action: pan-y;
+		/* The painting's azure. A drop shadow follows the strokes, not the box. */
+		--glow: rgb(56 132 196 / 0.45);
+		transition:
+			transform 250ms var(--ease-out),
+			filter 250ms var(--ease-out);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.halftone[data-interactive]:hover {
+			transform: scale(1.05);
+			filter: drop-shadow(0 0 18px var(--glow));
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.halftone[data-interactive]:hover {
+			transform: none;
+		}
+	}
+
+	.halftone :global(canvas),
+	img {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		display: block;
+	}
+
+	.halftone[data-intro] img,
+	.halftone[data-ready] img {
+		opacity: 0;
+	}
+</style>
+
+<script>
+	import { mountHalftone } from '../../lib/halftone/portrait';
+
+	// A still portrait is just its poster. Intro portraits are mounted by
+	// whatever plays the intro.
+	const portraits = document.querySelectorAll<HTMLElement>(
+		'.halftone[data-interactive]:not([data-intro])',
+	);
+	const observer = new IntersectionObserver(
+		(entries) => {
+			for (const entry of entries) {
+				if (!entry.isIntersecting) continue;
+				observer.unobserve(entry.target);
+				const root = entry.target as HTMLElement;
+				mountHalftone(root, { interactive: 'interactive' in root.dataset });
+			}
+		},
+		{ rootMargin: '200px' },
+	);
+	portraits.forEach((root) => observer.observe(root));
+</script>

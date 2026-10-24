@@ -1,0 +1,236 @@
+---
+// A little worksite for pages that aren't ready yet: a crane lowering one
+// more sticky note onto a half-built stack, behind cones and a barrier.
+// Colors come from the site: the sticky notes, the globe's orange and the
+// carousel's sand.
+const cone = (cx: number) =>
+	`M${cx - 14} 276 L${cx - 4} 234 Q${cx} 228 ${cx + 4} 234 L${cx + 14} 276 Z`;
+---
+
+<figure class="scene">
+	<svg viewBox="0 0 640 300" role="img" aria-label="A small crane lowering a sticky note onto a stack of notes, behind traffic cones and a striped barrier">
+		<defs>
+			<pattern id="stripes" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+				<rect width="16" height="16" fill="#fffcf7"></rect>
+				<rect width="8" height="16" fill="#e0662f"></rect>
+			</pattern>
+		</defs>
+
+		<!-- Ground -->
+		<line class="ground" x1="24" y1="282" x2="616" y2="282"></line>
+
+		<!-- Crane -->
+		<g class="crane">
+			<path d="M477 6 L290 30 M477 6 L556 30"></path>
+			<rect x="470" y="40" width="14" height="242"></rect>
+			<polyline points="470 40 484 54 470 68 484 82 470 96 484 110 470 124 484 138 470 152 484 166 470 180 484 194 470 208 484 222 470 236 484 250 470 264 484 278"></polyline>
+			<rect x="290" y="30" width="266" height="10"></rect>
+			<polyline points="290 30 304 40 318 30 332 40 346 30 360 40 374 30 388 40 402 30 416 40 430 30 444 40 458 30 472 40 486 30 500 40 514 30 528 40 542 30 556 40"></polyline>
+			<path d="M470 30 L477 6 L484 30"></path>
+			<rect class="solid" x="520" y="40" width="34" height="20" rx="2"></rect>
+			<rect class="solid" x="456" y="274" width="42" height="8" rx="1"></rect>
+			<rect class="solid" x="324" y="40" width="18" height="6" rx="1"></rect>
+		</g>
+
+		<!-- The stack so far -->
+		<g class="stack">
+			<rect x="302" y="220" width="62" height="62" rx="2" fill="#aacda5"></rect>
+			<rect x="306" y="158" width="62" height="62" rx="2" fill="#f181ae" transform="rotate(-3 337 189)"></rect>
+			<path class="writing" d="M312 236 h40 M312 246 h32 M312 256 h36"></path>
+			<path class="writing" d="M316 174 h40 M316 184 h28 M316 194 h36" transform="rotate(-3 337 189)"></path>
+		</g>
+
+		<!-- Cable, hook and the note on its way down. The cable stretches as
+		     the hook bobs, so it stays attached to the trolley. -->
+		<rect class="cable" x="332.25" y="46" width="1.5" height="24"></rect>
+		<g class="hook">
+			<path class="crane-line" d="M333 70 v6 q0 6 -5 6"></path>
+			<g class="note">
+				<path class="crane-line" d="M333 76 L306 86 M333 76 L360 86"></path>
+				<rect x="304" y="86" width="58" height="58" rx="2" fill="#ecc35a"></rect>
+				<path class="writing" d="M313 102 h38 M313 112 h26 M313 122 h34"></path>
+			</g>
+		</g>
+
+		<!-- Barrier -->
+		<g class="barrier">
+			<path class="leg" d="M178 250 L170 282 M178 250 L186 282 M254 250 L246 282 M254 250 L262 282"></path>
+			<rect x="160" y="238" width="112" height="18" rx="2" fill="url(#stripes)"></rect>
+		</g>
+
+		<!-- Cones -->
+		<g class="cone">
+			<path d={cone(108)}></path>
+			<path class="band" d="M100 252 L116 252 L118 262 L98 262 Z"></path>
+			<rect x="90" y="274" width="36" height="8" rx="2"></rect>
+		</g>
+		<g class="cone">
+			<path d={cone(560)}></path>
+			<path class="band" d="M552 252 L568 252 L570 262 L550 262 Z"></path>
+			<rect x="542" y="274" width="36" height="8" rx="2"></rect>
+		</g>
+	</svg>
+
+	<figcaption>
+		<p class="title">Notes are under construction.</p>
+		<p>
+			I'm writing up short-form thoughts on design engineering, interfaces
+			and things I'm learning. Check back soon, or leave a note in the{' '}
+			<a href="/guestbook">guestbook</a> in the meantime.
+		</p>
+	</figcaption>
+</figure>
+
+<style>
+	.scene {
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+	}
+
+	svg {
+		display: block;
+		width: 100%;
+		height: 20rem;
+		padding: 1.5rem;
+		box-sizing: border-box;
+		border-radius: 16px;
+		background-color: #f6efe4;
+	}
+
+	.ground {
+		stroke: #b5a992;
+		stroke-width: 1.5;
+		stroke-dasharray: 6 6;
+	}
+
+	.crane rect,
+	.crane polyline,
+	.crane path,
+	.crane-line {
+		fill: none;
+		stroke: #272727;
+		stroke-width: 1.5;
+		stroke-linejoin: round;
+		stroke-linecap: round;
+	}
+
+	.crane .solid,
+	.cable {
+		fill: #272727;
+	}
+
+	.stack rect,
+	.note rect {
+		filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.15));
+	}
+
+	.writing {
+		stroke: rgb(0 0 0 / 0.18);
+		stroke-width: 2;
+		stroke-linecap: round;
+	}
+
+	.barrier .leg {
+		stroke: #272727;
+		stroke-width: 3;
+		stroke-linecap: round;
+	}
+
+	.barrier rect {
+		stroke: #c4511f;
+		stroke-width: 1;
+	}
+
+	.cone path,
+	.cone rect {
+		fill: #e0662f;
+	}
+
+	.cone .band {
+		fill: #fffcf7;
+	}
+
+	figcaption {
+		max-width: 34rem;
+		color: #404040;
+		font-size: 15px;
+		line-height: 1.6;
+	}
+
+	figcaption p {
+		margin: 0;
+	}
+
+	.title {
+		margin-bottom: 0.35rem;
+		font-weight: 500;
+		color: #111;
+	}
+
+	figcaption a {
+		color: inherit;
+		text-decoration: underline;
+		text-decoration-color: #c4c4c4;
+		text-underline-offset: 3px;
+		transition: text-decoration-color 200ms var(--ease-out);
+	}
+
+	figcaption a:hover {
+		color: #111;
+		text-decoration-color: currentColor;
+	}
+
+	/* The hook bobs; the cable stretches with it, and the note swings a
+	   little from the hook. All three share a clock so they stay in step. */
+	@media (prefers-reduced-motion: no-preference) {
+		.hook {
+			animation: bob 2.4s var(--ease-in-out-sine) infinite alternate;
+		}
+
+		.cable {
+			transform-box: fill-box;
+			transform-origin: top;
+			animation: stretch 2.4s var(--ease-in-out-sine) infinite alternate;
+		}
+
+		.note {
+			transform-box: view-box;
+			transform-origin: 333px 76px;
+			animation: swing 4.8s var(--ease-in-out-sine) infinite alternate;
+		}
+	}
+
+	.scene {
+		--ease-in-out-sine: cubic-bezier(0.37, 0, 0.63, 1);
+	}
+
+	@keyframes bob {
+		from {
+			translate: 0 -4px;
+		}
+		to {
+			translate: 0 4px;
+		}
+	}
+
+	/* 24px of cable, so ±4px is 20/24 to 28/24. */
+	@keyframes stretch {
+		from {
+			scale: 1 0.8333;
+		}
+		to {
+			scale: 1 1.1667;
+		}
+	}
+
+	@keyframes swing {
+		from {
+			rotate: -3deg;
+		}
+		to {
+			rotate: 3deg;
+		}
+	}
+</style>

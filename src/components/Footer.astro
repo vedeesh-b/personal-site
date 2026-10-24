@@ -1,0 +1,201 @@
+---
+import { Image } from 'astro:assets';
+import sharkTooth from '../assets/shark-tooth.png';
+import LogoLink from './ui/LogoLink.astro';
+import astroLogo from '../assets/astro-light.png';
+
+const socialLinks = [
+	{ label: 'Email', href: 'mailto:vedeesh18@gmail.com' },
+	{ label: 'GitHub', href: 'https://github.com/vedeesh-b' },
+	{ label: 'LinkedIn', href: 'https://www.linkedin.com/in/vedeesh-bali' },
+];
+---
+
+<footer id="site-footer">
+	<div class="column">
+		<span class="name">Vedeesh Bali © 2026</span>
+		<span class="reveal"
+			><span style="--i: 0">
+				Built with <LogoLink href="https://astro.build/" logo={astroLogo}>
+					Astro
+				</LogoLink>
+			</span>
+		</span>
+	</div>
+
+	<nav class="socials" aria-label="Social links">
+		{
+			socialLinks.map((link, i) => (
+				<span class="reveal">
+					<a href={link.href} target="_blank" style={`--i: ${i + 1}`}>
+						{link.label}
+					</a>
+				</span>
+			))
+		}
+	</nav>
+
+	<button id="to-top" type="button" aria-label="Back to top">
+		<Image
+			src={sharkTooth}
+			alt="Shark Tooth"
+			densities={[1, 2, 3]}
+			format="webp"
+		/>
+	</button>
+</footer>
+
+<noscript>
+	<style>
+		#site-footer .reveal > * {
+			transform: none;
+			opacity: 1;
+		}
+	</style>
+</noscript>
+
+<script>
+	const footer = document.getElementById('site-footer')!;
+
+	// Reveal once. The 500ms wait lives in the CSS transition-delay.
+	new IntersectionObserver(
+		(entries, observer) => {
+			if (entries.some((entry) => entry.isIntersecting)) {
+				footer.dataset.revealed = '';
+				observer.disconnect();
+			}
+		},
+		{ threshold: 0.75 },
+	).observe(footer);
+
+	document.getElementById('to-top')!.addEventListener('click', () => {
+		const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+		window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+	});
+</script>
+
+<style>
+	footer {
+		position: relative;
+		box-sizing: border-box;
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		min-height: 128px;
+		padding: 2.75rem var(--page-padding-x);
+		background-color: #fafafa;
+		border-top: 1px dashed #cdcdcd;
+		font-size: 13px;
+		line-height: 18px;
+		margin-top: var(--footer-gap);
+		font-family: var(--font-mono);
+		letter-spacing: 0.3px;
+		text-transform: uppercase;
+	}
+
+	.column {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.name,
+	a {
+		color: #1a1a1a;
+	}
+
+	a {
+		text-decoration: none;
+	}
+
+	.socials {
+		display: flex;
+		gap: 1.75rem;
+	}
+
+	/* Each line sits behind its own mask; its content waits just above the
+	   mask's top edge and slides down into view. */
+	.reveal {
+		display: block;
+		overflow: clip;
+	}
+
+	.reveal > * {
+		display: block;
+		transform: translateY(-100%);
+		opacity: 0;
+		transition:
+			transform 400ms var(--ease-out),
+			opacity 400ms var(--ease-out);
+		transition-delay: calc(500ms + var(--i) * 60ms);
+	}
+
+	footer[data-revealed] .reveal > *,
+	footer:focus-within .reveal > * {
+		transform: none;
+		opacity: 1;
+	}
+
+	/* Keyboard users tabbing in shouldn't wait for the scroll delay. */
+	footer:focus-within:not([data-revealed]) .reveal > * {
+		transition-delay: 0ms;
+	}
+
+	#to-top {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		translate: -50% -50%;
+		display: grid;
+		place-items: center;
+		padding: 8px;
+		border: none;
+		background: none;
+		color: #272727;
+		cursor: pointer;
+	}
+
+	#to-top img {
+		display: block;
+		width: 32px;
+		height: auto;
+		transition: transform 300ms var(--ease-in-out);
+	}
+
+	/* The tip points down until you reach for it, then flips to point the way
+	   it'll take you. */
+	@media (hover: hover) and (pointer: fine) {
+		#to-top:hover img {
+			transform: rotate(180deg);
+		}
+	}
+
+	#to-top:focus-visible img {
+		transform: rotate(180deg);
+	}
+
+	@media (max-width: 640px) {
+		footer {
+			flex-direction: column;
+			gap: 1.25rem;
+		}
+
+		#to-top {
+			position: static;
+			translate: none;
+			align-self: center;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.reveal > * {
+			transform: none;
+			transition: opacity 300ms ease;
+			transition-delay: calc(500ms + var(--i) * 60ms);
+		}
+
+		#to-top img {
+			transition: none;
+		}
+	}
+</style>

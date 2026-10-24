@@ -1,0 +1,367 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection, render } from 'astro:content';
+import { mdxComponents } from '../../components/mdx';
+import Badge from '../../components/mdx/Badge.astro';
+import ProjectSummary from '../../components/ProjectSummary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { videoUrl } from '../../lib/projectVideos';
+
+export async function getStaticPaths() {
+	const projects = await getCollection('projects');
+	return projects.map((project) => ({
+		params: { slug: project.id },
+		props: { project },
+	}));
+}
+
+const { project } = Astro.props;
+const { title, description, cover, coverAlt, coverVideo, video, tags, summary } = project.data;
+const videoSrc = videoUrl(video);
+const phoneVideoSrc = videoUrl(coverVideo);
+// Matches the card on /projects so the cover morphs between the two pages.
+const transitionName = `project-${project.id}`;
+const { Content } = await render(project);
+---
+
+<Layout title={title} description={description}>
+	<main>
+		<article>
+			<h1>{title}</h1>
+			{
+				tags && (
+					<div class="tags">
+						{tags.map((tag) => (
+							<Badge>{tag}</Badge>
+						))}
+					</div>
+				)
+			}
+			<!-- The wrapper morphs from the card on /projects, video and all. -->
+			<div
+				class="landing"
+				data-landing
+				style={`view-transition-name: ${transitionName}; view-transition-class: project-cover`}
+			>
+				{
+					cover ? (
+						<Image class="landing-img" src={cover} alt={coverAlt ?? ''} />
+					) : (
+						<div class="landing-img" role="img" aria-label="Project image placeholder" />
+					)
+				}
+				{
+					videoSrc && (
+						<Fragment>
+							{/* Phones get the card's smaller encode, which is plenty at that width. */}
+							<video muted loop playsinline preload="auto" aria-hidden="true" tabindex="-1">
+								{phoneVideoSrc && <source src={phoneVideoSrc} type="video/mp4" media="(max-width: 768px)" />}
+								<source src={videoSrc} type="video/mp4" />
+							</video>
+							<button class="video-toggle" type="button" aria-label="Play video" hidden>
+								<svg class="icon-play" viewBox="0 0 16 16" aria-hidden="true">
+									<path d="M5 3.5v9l7-4.5z" />
+								</svg>
+								<svg class="icon-pause" viewBox="0 0 16 16" aria-hidden="true">
+									<path d="M4.5 3h2.5v10H4.5zM9 3h2.5v10H9z" />
+								</svg>
+							</button>
+						</Fragment>
+					)
+				}
+			</div>
+			{summary && <ProjectSummary {...summary} />}
+			<div class="prose">
+				<Content components={mdxComponents} />
+			</div>
+		</article>
+	</main>
+</Layout>
+
+<style>
+	main {
+		box-sizing: border-box;
+		padding: var(--page-padding-y) var(--page-padding-x);
+	}
+
+	.landing {
+		position: relative;
+		aspect-ratio: 16 / 9;
+		border-radius: 12px;
+		overflow: hidden;
+	}
+
+	.landing-img,
+	.landing video {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	/* Waits invisibly over the cover until frames are actually painting. */
+	.landing video {
+		position: absolute;
+		inset: 0;
+		opacity: 0;
+		transition: opacity 0.6s var(--ease-out);
+	}
+
+	.landing video.playing {
+		opacity: 1;
+	}
+
+	/* Autoplaying motion needs a way to stop it. */
+	.video-toggle {
+		position: absolute;
+		right: 0.75rem;
+		bottom: 0.75rem;
+		display: grid;
+		place-items: center;
+		width: var(--tap-target);
+		height: var(--tap-target);
+		padding: 0;
+		border: 0;
+		border-radius: 50%;
+		/* Light, so it shows on the dark demos, with a shadow for the light ones. */
+		background-color: rgb(255 255 255 / 0.8);
+		backdrop-filter: blur(8px);
+		box-shadow: 0 1px 4px rgb(0 0 0 / 0.2);
+		color: #111;
+		cursor: pointer;
+		animation: toggle-in 0.3s var(--ease-out);
+		transition: background-color 0.2s ease;
+	}
+
+	.video-toggle[hidden] {
+		display: none;
+	}
+
+	.video-toggle svg {
+		width: 16px;
+		height: 16px;
+		fill: currentColor;
+	}
+
+	.video-toggle:not([data-playing]) .icon-pause,
+	.video-toggle[data-playing] .icon-play {
+		display: none;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.video-toggle:hover {
+			background-color: #fff;
+		}
+	}
+
+	.video-toggle:active {
+		scale: 0.94;
+	}
+
+	.video-toggle:focus-visible {
+		outline: 2px solid #111;
+		outline-offset: 2px;
+	}
+
+	@keyframes toggle-in {
+		from {
+			opacity: 0;
+			scale: 0.9;
+		}
+	}
+
+	/* Only the placeholder: cover images have transparent rounded corners of their own. */
+	div.landing-img {
+		background-color: #d9d9d9;
+	}
+
+	h1 {
+		font-size: var(--text-xl);
+		margin-top: 1.5rem;
+		font-weight: 500;
+		color: #111;
+		letter-spacing: var(--tracking-tight);
+		max-width: 30ch;
+	}
+
+	.tags {
+		margin: 1rem 0;
+	}
+
+	.visually-hidden {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	/*
+	 * Rendered MDX isn't part of this template, so its elements need :global().
+	 * :where(.prose) keeps these rules at the lowest useful specificity, so they
+	 * act as defaults that any class inside an MDX component overrides.
+	 */
+	.prose {
+		max-width: 65ch;
+		margin-top: 2rem;
+		font-size: 16px;
+		line-height: 1.65;
+		color: #545454;
+	}
+
+	:where(.prose) :global(h2) {
+		margin: 3rem 0 1.4rem;
+		font-size: 20px;
+		font-weight: 500;
+		letter-spacing: -0.4px;
+		color: #111;
+	}
+
+	:where(.prose) :global(h3) {
+		margin: 2rem 0 0.5rem;
+		font-size: 17px;
+		font-weight: 500;
+		color: #111;
+	}
+
+	:where(.prose) :global(p),
+	:where(.prose) :global(ul),
+	:where(.prose) :global(ol) {
+		margin: 0 0 1.25rem;
+	}
+
+	:where(.prose) :global(li) {
+		margin-bottom: 0.4rem;
+	}
+
+	/* Direct children only, so the BarChart's table keeps its own styles. */
+	.prose > :global(table) {
+		width: 100%;
+		margin: 0 0 2rem;
+		border-collapse: collapse;
+		font-size: 15px;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.prose > :global(table th),
+	.prose > :global(table td) {
+		padding: 0.6rem 1rem 0.6rem 0;
+		border-bottom: 1px solid #ececec;
+		text-align: left;
+	}
+
+	.prose > :global(table thead th) {
+		font-weight: 500;
+		color: #111;
+	}
+
+	:where(.prose) :global(img) {
+		max-width: 100%;
+		height: auto;
+		border-radius: 12px;
+	}
+
+	/*
+	 * Code. Naming real fonts before the generic `monospace` also stops the
+	 * browser shrinking code to its 13px monospace default.
+	 */
+	:where(.prose) :global(code),
+	:where(.prose) :global(pre) {
+		font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+	}
+
+	/* Inline code: sized relative to the surrounding text, so it stays in
+	   proportion inside headings and alerts. */
+	:where(.prose) :global(code) {
+		font-size: 14px;
+		padding: 0.2em 0.35em;
+		border-radius: 4px;
+		background-color: #f2f2f2;
+		color: #222;
+	}
+
+	/* Fenced blocks. Shiki sets the theme's background and text colours
+	   inline on the <pre>, so only the box is styled here. */
+	:where(.prose) :global(pre) {
+		margin: 0 0 1.25rem;
+		padding: 1rem 1.25rem;
+		border-radius: 12px;
+		overflow-x: auto;
+		font-size: 14px;
+		line-height: 1.6;
+	}
+
+	/* Shiki makes the block focusable so keyboard users can scroll it. */
+	:where(.prose) :global(pre:focus-visible) {
+		outline: 2px solid #111;
+		outline-offset: 2px;
+	}
+
+	/* Undo the inline-code pill inside blocks; the <pre> is the box. */
+	:where(.prose) :global(pre code) {
+		padding: 0;
+		border-radius: 0;
+		background: none;
+		color: inherit;
+		font-size: inherit;
+	}
+
+	@media (max-width: 768px) {
+		.landing {
+			border-radius: 8px;
+		}
+	}
+</style>
+
+<script>
+	// The cover holds for a moment after the page arrives, then the demo plays over it.
+	const AUTOPLAY_DELAY = 2000;
+	const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+	for (const landing of document.querySelectorAll<HTMLElement>('[data-landing]')) {
+		const video = landing.querySelector('video');
+		const toggle = landing.querySelector<HTMLButtonElement>('.video-toggle');
+		if (!video || !toggle) continue;
+
+		// What the reader wants, and whether it's worth playing right now.
+		let wanted = !reducedMotion.matches;
+		let started = false;
+		let onScreen = true;
+
+		const sync = () => {
+			const play = started && wanted && onScreen;
+			if (play) video.play().catch(() => {});
+			else video.pause();
+			toggle.toggleAttribute('data-playing', wanted);
+			toggle.setAttribute('aria-label', wanted ? 'Pause video' : 'Play video');
+		};
+
+		// Reveal only once frames are painting, so a slow load never covers the image with an empty box.
+		video.addEventListener('playing', () => video.classList.add('playing'));
+
+		toggle.addEventListener('click', () => {
+			wanted = !wanted;
+			started = true;
+			sync();
+		});
+
+		// No point spending battery on a loop scrolled out of sight; it picks up again on the way back.
+		new IntersectionObserver(([entry]) => {
+			onScreen = entry.isIntersecting;
+			sync();
+		}).observe(landing);
+
+		if (wanted) {
+			setTimeout(() => {
+				started = true;
+				toggle.hidden = false;
+				sync();
+			}, AUTOPLAY_DELAY);
+		} else {
+			// Reduced motion: never autoplay, but offer it.
+			toggle.hidden = false;
+			sync();
+		}
+	}
+</script>

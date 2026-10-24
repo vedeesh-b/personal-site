@@ -13,13 +13,26 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# environment variables
-.env
-.env.production
-
 # macOS-specific files
 .DS_Store
 
 # jetbrains setting folder
 .idea/
 .vercel
+
+# environment variables (vercel env pull writes .env.local)
+.env*
+!.env.example
+
+# agent tooling: the brag skill's media (.claude/skills/brag links into .agents)
+.agents/
+.claude/skills/brag
+.claude/worktrees/
+.claude/settings.local.json
+
+# full-length project video originals, not used by the build (see src/lib/projectVideos.ts)
+src/assets/projects/*/brag.mp4
+
+# agent planning notes and skill lockfile
+plans/
+skills-lock.json

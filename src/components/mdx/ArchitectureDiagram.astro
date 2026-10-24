@@ -1,0 +1,340 @@
+---
+/*
+ * A system overview in the style of PostHog's architecture docs: each box
+ * names a service and the technology behind it, data stores are cylinders,
+ * a dashed boundary marks what you deploy, and only the arrows that need
+ * explaining carry a label. Coordinates are in viewBox units, set in the MDX.
+ */
+
+type Side = 'left' | 'right' | 'top' | 'bottom';
+
+interface Node {
+	id: string;
+	title: string;
+	/** Second line: the technology behind the service. */
+	tech?: string;
+	/** Extra monospace lines, e.g. the tables inside a database. */
+	lines?: string[];
+	/** 'store' draws a cylinder. */
+	kind?: 'service' | 'store';
+	x: number;
+	y: number;
+	w: number;
+	h: number;
+}
+
+interface Group {
+	title: string;
+	x: number;
+	y: number;
+	w: number;
+	h: number;
+}
+
+interface Edge {
+	from: string;
+	to: string;
+	fromSide?: Side;
+	toSide?: Side;
+	/** Slides the start point along its side, to split arrows that share one. */
+	fromOffset?: number;
+	label?: string;
+	/** Overrides where the label sits along the line, in viewBox units. */
+	labelX?: number;
+}
+
+interface Props {
+	title: string;
+	width: number;
+	height: number;
+	nodes: Node[];
+	groups?: Group[];
+	edges: Edge[];
+	caption?: string;
+}
+
+const { title, width, height, nodes, groups = [], edges, caption } = Astro.props;
+const markerId = `arrow-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+
+const byId = new Map(nodes.map((node) => [node.id, node]));
+const horizontal = (side: Side) => side === 'left' || side === 'right';
+
+function anchor(node: Node, side: Side, offset = 0) {
+	switch (side) {
+		case 'left':
+			return { x: node.x, y: node.y + node.h / 2 + offset };
+		case 'right':
+			return { x: node.x + node.w, y: node.y + node.h / 2 + offset };
+		case 'top':
+			return { x: node.x + node.w / 2 + offset, y: node.y };
+		case 'bottom':
+			return { x: node.x + node.w / 2 + offset, y: node.y + node.h };
+	}
+}
+
+// Orthogonal routing: straight when the ends line up, otherwise one elbow
+// (side to top/bottom) or two (side to side, bending halfway across).
+const routed = edges.map((edge) => {
+	const from = byId.get(edge.from)!;
+	const to = byId.get(edge.to)!;
+	const fromSide = edge.fromSide ?? 'right';
+	const toSide = edge.toSide ?? 'left';
+	const start = anchor(from, fromSide, edge.fromOffset);
+	const end = anchor(to, toSide);
+
+	// A tall target (like a database) takes the arrow wherever it lands.
+	if (horizontal(toSide) && start.y > to.y + 8 && start.y < to.y + to.h - 8) {
+		end.y = start.y;
+	}
+
+	let points: { x: number; y: number }[];
+	if (horizontal(fromSide) && horizontal(toSide)) {
+		const mid = (start.x + end.x) / 2;
+		points =
+			start.y === end.y
+				? [start, end]
+				: [start, { x: mid, y: start.y }, { x: mid, y: end.y }, end];
+	} else if (horizontal(fromSide)) {
+		points = [start, { x: end.x, y: start.y }, end];
+	} else if (horizontal(toSide)) {
+		points = [start, { x: start.x, y: end.y }, end];
+	} else {
+		const mid = (start.y + end.y) / 2;
+		points = [start, { x: start.x, y: mid }, { x: end.x, y: mid }, end];
+	}
+
+	// The label sits on the longest horizontal run, where there's room for it.
+	let label;
+	if (edge.label) {
+		let best = { length: -1, x: 0, y: 0 };
+		for (let i = 1; i < points.length; i++) {
+			const a = points[i - 1];
+			const b = points[i];
+			const length = a.y === b.y ? Math.abs(b.x - a.x) : Math.abs(b.y - a.y) / 4;
+			if (length > best.length) {
+				best = { length, x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+			}
+		}
+		label = { text: edge.label, x: edge.labelX ?? best.x, y: best.y };
+	}
+
+	return {
+		d: points.map((p, i) => `${i ? 'L' : 'M'} ${p.x} ${p.y}`).join(' '),
+		label,
+	};
+});
+
+const CAP = 9;
+---
+
+<figure class="architecture">
+	<div class="diagram-title">{title}</div>
+	<div class="scroller">
+		<svg
+			viewBox={`0 0 ${width} ${height}`}
+			style={`--min-width: ${Math.round(width * 0.82)}px`}
+			role="img"
+			aria-label={title}
+		>
+			<defs>
+				<marker
+					id={markerId}
+					viewBox="0 0 10 10"
+					refX="9"
+					refY="5"
+					markerWidth="7"
+					markerHeight="7"
+					orient="auto-start-reverse"
+				>
+					<path d="M 0 0 L 10 5 L 0 10 z" class="arrowhead" />
+				</marker>
+			</defs>
+
+			{
+				groups.map((group) => (
+					<g class="group">
+						<rect x={group.x} y={group.y} width={group.w} height={group.h} rx="14" />
+						<text x={group.x + 16} y={group.y + 22}>
+							{group.title}
+						</text>
+					</g>
+				))
+			}
+
+			{
+				routed.map(({ d }) => (
+					<path class="edge" d={d} marker-end={`url(#${markerId})`} />
+				))
+			}
+
+			{
+				nodes.map((node) => {
+					const store = node.kind === 'store';
+					const top = store ? node.y + CAP * 2 + 6 : node.y;
+					return (
+						<g class:list={['node', { store }]}>
+							{store ? (
+								<>
+									<path
+										class="shape"
+										d={`M ${node.x} ${node.y + CAP}
+											a ${node.w / 2} ${CAP} 0 0 1 ${node.w} 0
+											V ${node.y + node.h - CAP}
+											a ${node.w / 2} ${CAP} 0 0 1 ${-node.w} 0 Z`}
+									/>
+									<path
+										class="rim"
+										d={`M ${node.x} ${node.y + CAP} a ${node.w / 2} ${CAP} 0 0 0 ${node.w} 0`}
+									/>
+								</>
+							) : (
+								<rect
+									class="shape"
+									x={node.x}
+									y={node.y}
+									width={node.w}
+									height={node.h}
+									rx="10"
+								/>
+							)}
+							<text class="node-title" x={node.x + 14} y={top + 24}>
+								{node.title}
+							</text>
+							{node.tech && (
+								<text class="tech" x={node.x + 14} y={top + 42}>
+									{node.tech}
+								</text>
+							)}
+							{node.lines?.map((line, i) => (
+								<text class="line" x={node.x + 14} y={top + 70 + i * 19}>
+									{line}
+								</text>
+							))}
+						</g>
+					);
+				})
+			}
+
+			{
+				routed.map(
+					({ label }) =>
+						label && (
+							<text class="edge-label" x={label.x} y={label.y + 4}>
+								{label.text}
+							</text>
+						),
+				)
+			}
+		</svg>
+	</div>
+	{caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+	.architecture {
+		--ink: #222;
+		--muted: #6b6b6b;
+		--hairline: #e3e3e3;
+		--line: #9a9a9a;
+
+		margin: 3rem 0;
+	}
+
+	.diagram-title {
+		margin: 0 0 1.5rem;
+		font-size: 20px;
+		font-weight: 500;
+		letter-spacing: -0.3px;
+		color: var(--ink);
+	}
+
+	/* Text in the SVG scales with it, so on narrow screens the diagram keeps
+	   a readable size and scrolls inside its own frame instead. */
+	.scroller {
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+	}
+
+	svg {
+		display: block;
+		width: 100%;
+		min-width: var(--min-width);
+		height: auto;
+		font-family: inherit;
+	}
+
+	.group rect {
+		fill: #fafafa;
+		stroke: #cfcfcf;
+		stroke-dasharray: 5 4;
+	}
+
+	.group text {
+		font-size: 11.5px;
+		letter-spacing: 0.8px;
+		text-transform: uppercase;
+		fill: var(--muted);
+	}
+
+	.shape {
+		fill: #fff;
+		stroke: var(--hairline);
+		stroke-width: 1.25;
+	}
+
+	.store .shape {
+		fill: #f6efe4;
+		stroke: #ddd3c3;
+	}
+
+	.rim {
+		fill: none;
+		stroke: #ddd3c3;
+		stroke-width: 1.25;
+	}
+
+	.node-title {
+		font-size: 14px;
+		font-weight: 500;
+		letter-spacing: -0.24px;
+		fill: var(--ink);
+	}
+
+	.tech {
+		font-size: 12.5px;
+		fill: var(--muted);
+	}
+
+	.line {
+		font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+		font-size: 11.5px;
+		fill: #8a6d4b;
+	}
+
+	.edge {
+		fill: none;
+		stroke: var(--line);
+		stroke-width: 1.25;
+	}
+
+	.arrowhead {
+		fill: var(--line);
+	}
+
+	/* A halo in the page colour lets the label sit on top of its line. */
+	.edge-label {
+		font-size: 12px;
+		text-anchor: middle;
+		fill: var(--muted);
+		paint-order: stroke;
+		stroke: #fff;
+		stroke-width: 5px;
+		stroke-linejoin: round;
+	}
+
+	figcaption {
+		margin-top: 1.25rem;
+		font-size: 13px;
+		color: var(--muted);
+	}
+</style>

@@ -1,34 +1,334 @@
 ---
-import '@fontsource/geist-sans/400.css';
-import '@fontsource/geist-sans/500.css';
+import { Font } from 'astro:assets';
 import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import Splash from '../components/Splash.astro';
+import { profile } from '../data/profile';
+
+interface Props {
+	/** The page's name, shown before the site's in the tab. Leave out on the home page. */
+	title?: string;
+	/** For search results and link previews. */
+	description?: string;
+}
+
+const {
+	title,
+	description = `${profile.name}, ${profile.role.toLowerCase()}: projects, notes, and a guestbook.`,
+} = Astro.props;
 ---
 
 <!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content={description} />
+		<!-- Cropped from src/assets/halftone/source.png. -->
+		<link rel="icon" href="/favicon.ico" sizes="48x48" />
+		<link rel="icon" type="image/png" href="/icon-192.png" sizes="192x192" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
+		<!-- Fonts are configured in astro.config.mjs. Preloaded so they're
+		     ready for a new page's first paint. -->
+		<Font cssVariable="--font-geist-sans" preload />
+		<Font cssVariable="--font-geist-mono" preload />
+		<title>{title ? `${title} · ${profile.name}` : profile.name}</title>
+		<!-- Play the splash on the first page of a session. Runs before first
+		     paint, so nobody else sees it flash. -->
+		<script is:inline>
+			try {
+				if (!sessionStorage.getItem('splash-seen')) {
+					sessionStorage.setItem('splash-seen', '1');
+					document.documentElement.dataset.splash = '';
+					// If Splash's script never takes over (it sets 'playing'),
+					// let the page scroll again. CSS can't undo the overflow.
+					setTimeout(() => {
+						if (document.documentElement.dataset.splash === '')
+							delete document.documentElement.dataset.splash;
+					}, 4000);
+				}
+			} catch {}
+		</script>
+		<!-- Tells a page transition which way to move: right through the navbar
+		     order slides content in from the right, left from the left. Inline,
+		     so it's listening before the new page's first frame. -->
+		<script is:inline>
+			addEventListener('pagereveal', (event) => {
+				const from = window.navigation?.activation?.from?.url;
+				if (!event.viewTransition || !from) return;
+				const order = ['/', '/about', '/projects', '/notes', '/guestbook'];
+				const rank = (url) => {
+					const path = new URL(url).pathname.replace(/\/$/, '') || '/';
+					return order.findLastIndex(
+						(page) => path === page || path.startsWith(`${page}/`),
+					);
+				};
+				const step = rank(location.href) - rank(from);
+				if (step)
+					event.viewTransition.types.add(step > 0 ? 'forward' : 'backward');
+			});
+		</script>
 	</head>
 	<body>
+		<Splash />
 		<Navbar />
-		<slot />
+		<div id="page">
+			<slot />
+		</div>
+		<Footer />
 	</body>
 </html>
+
+<style is:global>
+	/* Keep room for the scrollbar on every page, so a short page (no
+	   scrollbar) isn't wider than a long one and the navbar doesn't shift
+	   when moving between them. */
+	html {
+		scrollbar-gutter: stable;
+	}
+
+	/*
+	 * Breakpoints (literal in @media, since custom properties can't be used
+	 * there):
+	 *   < 640px     phones, foldable cover screens: menu button, one column
+	 *   640–1023px  foldable inner screens, tablets: navbar links, stacked About
+	 *   ≥ 1024px    laptops and up: side-by-side layouts
+	 * Wider screens are handled by --page-max, not a breakpoint.
+	 *
+	 * Fluid values grow linearly from a 360px to a 1440px viewport, then hold.
+	 */
+	:root {
+		/* Layout. Content is at most --page-max wide and centered, with at
+		   least --gutter either side. 100vw rather than 100%, so components
+		   can use this to work out the content width too (FlowDiagram). */
+		--page-max: 62rem;
+		--gutter: clamp(1.25rem, 4vw, 3rem);
+		--page-padding-x: max(var(--gutter), (100vw - var(--page-max)) / 2);
+		--page-padding-y: clamp(1rem, 0.75rem + 1vw, 1.5rem);
+
+		/* Spacing. Fixed steps inside components, fluid ones between sections. */
+		--space-2xs: 0.25rem;
+		--space-xs: 0.5rem;
+		--space-s: 0.75rem;
+		--space-m: 1rem;
+		--space-l: 1.5rem;
+		--space-xl: 2rem;
+		--space-2xl: clamp(2rem, 1.33rem + 2.96vw, 4rem); /* 32 → 64 */
+		--section-gap: clamp(4rem, 2.67rem + 5.93vw, 8rem); /* 64 → 128 */
+		--footer-gap: clamp(5rem, 3.33rem + 7.41vw, 10rem); /* 80 → 160 */
+
+		/* Type. Geist Sans for everything; Geist Mono as the secondary face for
+		   small labels and metadata. */
+		--font-sans: var(--font-geist-sans);
+		--font-mono: var(--font-geist-mono);
+
+		/* In rem, so the reader's browser font size still applies. */
+		--text-xs: 0.75rem; /* 12: small mono metadata */
+		--text-sm: 0.8125rem; /* 13: mono labels, footer, captions */
+		--text-base: 1rem; /* 16: interface text, descriptions */
+		--text-md: clamp(1.0625rem, 1rem + 0.278vw, 1.25rem); /* 17 → 20: lead text */
+		--text-lg: clamp(1.125rem, 1.042rem + 0.37vw, 1.375rem); /* 18 → 22: card titles */
+		--text-xl: clamp(1.5rem, 1.417rem + 0.37vw, 1.75rem); /* 24 → 28: page titles */
+		--text-2xl: clamp(1.75rem, 1.5rem + 1.11vw, 2.5rem); /* 28 → 40: statements */
+
+		--leading-tight: 1.15;
+		--leading-body: 1.45;
+		--tracking-tight: -0.02em;
+		--tracking-body: -0.01em;
+		--tracking-label: 0.04em;
+		--measure: 65ch;
+
+		/* Smallest comfortable touch target. */
+		--tap-target: 2.75rem;
+
+		/* Motion. Entering/exiting UI uses --ease-out, things moving across the
+		   screen use --ease-in-out, and big spatial moves (page morphs) use
+		   --ease-drawer, which starts fast and settles gently. */
+		--ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+		--ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+		--ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+	}
+
+	/* Native cross-document view transitions: normal page loads, so component
+	   scripts that run once on load keep working. */
+	@view-transition {
+		navigation: auto;
+	}
+
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation-duration: 200ms;
+		animation-timing-function: var(--ease-out);
+	}
+
+	/* Shared elements (a project's cover image) morph between pages. */
+	::view-transition-group(*) {
+		animation-duration: 400ms;
+		animation-timing-function: var(--ease-drawer);
+	}
+
+	/* The card image and the cropped landing image have different aspect
+	   ratios; crop instead of stretching while they morph. */
+	::view-transition-old(*.project-cover),
+	::view-transition-new(*.project-cover) {
+		height: 100%;
+		object-fit: cover;
+	}
+
+	/* The navbar is the same on every page, so it stays put: the new one
+	   shows straight away and only the active underline moves. */
+	#navbar {
+		view-transition-name: site-nav;
+	}
+
+	/* No morph either: if the old page was scrolled, its navbar was higher
+	   up, and the shared 400ms group animation would slide it down. */
+	::view-transition-group(site-nav) {
+		animation: none;
+	}
+
+	::view-transition-old(site-nav) {
+		display: none;
+	}
+
+	::view-transition-new(site-nav) {
+		animation: none;
+	}
+
+	/* The content leaves quickly and the new content arrives just behind
+	   it: up and in by default, sideways when moving along the navbar. The
+	   group doesn't resize, since pages are different heights. */
+	#page {
+		view-transition-name: page;
+	}
+
+	::view-transition-group(page) {
+		animation: none;
+	}
+
+	::view-transition-old(page) {
+		animation: page-out 150ms var(--ease-out) both;
+	}
+
+	::view-transition-new(page) {
+		animation: page-in 280ms var(--ease-out) 60ms both;
+	}
+
+	@keyframes page-out {
+		to {
+			opacity: 0;
+			translate: var(--page-out, 0 -6px);
+		}
+	}
+
+	@keyframes page-in {
+		from {
+			opacity: 0;
+			translate: var(--page-in, 0 10px);
+		}
+	}
+
+	html:active-view-transition-type(forward) {
+		--page-out: -12px 0;
+		--page-in: 24px 0;
+	}
+
+	html:active-view-transition-type(backward) {
+		--page-out: 12px 0;
+		--page-in: -24px 0;
+	}
+
+	/* Section titles (About, Projects, …) sit in the same place, so the
+	   title swaps in place while the content below moves. */
+	::view-transition-group(page-title) {
+		animation: none;
+	}
+
+	::view-transition-old(page-title) {
+		animation: page-fade-out 150ms var(--ease-out) both;
+	}
+
+	::view-transition-new(page-title) {
+		animation: page-fade-in 220ms var(--ease-out) 60ms both;
+	}
+
+	@keyframes page-fade-out {
+		to {
+			opacity: 0;
+		}
+	}
+
+	@keyframes page-fade-in {
+		from {
+			opacity: 0;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		::view-transition-group(*) {
+			animation: none;
+		}
+
+		::view-transition-old(page) {
+			animation-name: page-fade-out;
+		}
+
+		::view-transition-new(page) {
+			animation-name: page-fade-in;
+		}
+	}
+
+	/* While the splash plays, the page holds still and the navbar's name and
+	   role wait for the splash's copies to land on them. */
+	html[data-splash] {
+		overflow: hidden;
+	}
+
+	html[data-splash] #branding-content {
+		visibility: hidden;
+	}
+
+	/* If the splash script never runs, show them anyway (see Splash.astro). */
+	html[data-splash=''] #branding-content {
+		animation: splash-failsafe-reveal 0s 4s forwards;
+	}
+
+	@keyframes splash-failsafe-reveal {
+		to {
+			visibility: visible;
+		}
+	}
+</style>
 
 <style>
 	html,
 	body {
 		margin: 0;
 		width: 100%;
-		height: 100%;
-		font-family: 'Geist Sans', sans-serif;
+		min-height: 100%;
+		display: flow-root;
+		font-family: var(--font-sans);
 		font-weight: 400;
 		letter-spacing: -0.325px;
 		color: #545454;
+	}
+
+	/* A column at least as tall as the viewport. The page content grows into
+	   any leftover space, so on short pages the footer sits at the bottom of
+	   the screen instead of under the content. */
+	body {
+		display: flex;
+		flex-direction: column;
+		min-height: 100dvh;
+	}
+
+	/* Decorations allowed to spill past their box (the hero heading's
+	   particle canvas) mustn't make a phone-width page scroll sideways.
+	   `clip` rather than `hidden`, so it isn't a scroll container and
+	   `position: sticky` inside still works. */
+	#page {
+		flex-grow: 1;
+		overflow-x: clip;
 	}
 </style>

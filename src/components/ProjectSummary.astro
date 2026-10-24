@@ -1,0 +1,375 @@
+---
+interface Props {
+	intro: string;
+	context: string;
+	problem: string;
+}
+
+const { intro, context, problem } = Astro.props;
+
+const panels = [
+	{ label: 'Introduction', text: intro },
+	{ label: 'Context', text: context },
+	{ label: 'Problem solved', text: problem },
+];
+---
+
+<section
+	class="summary"
+	aria-label="Project summary"
+	style={`--panel-count: ${panels.length}`}
+>
+	<div class="pin">
+		<div class="track">
+			{
+				panels.map(({ label, text }, i) => (
+					<div class="panel" style={`--i: ${i}`}>
+						<h3>{label}</h3>
+						<p>
+							{/* Words are split for the touch-screen reveal; screen readers get the sentence whole. */}
+							<span class="visually-hidden">{text}</span>
+							<span aria-hidden="true">
+								{text.split(' ').map((word, w) => (
+									<Fragment>
+										{w > 0 && ' '}
+										<span class="word" style={`--w: ${w}`}>
+											{word}
+										</span>
+									</Fragment>
+								))}
+							</span>
+						</p>
+						<span class="step" aria-hidden="true">
+							{String(i + 1).padStart(2, '0')} / {String(panels.length).padStart(2, '0')}
+						</span>
+					</div>
+				))
+			}
+		</div>
+	</div>
+</section>
+
+<style>
+	.summary {
+		margin: 6rem 0;
+		/*
+		 * While pinned, scrolling walks through a reading pause on every panel
+		 * with a slide between each: read 0.5, slide 0.7, read 0.5, slide 0.7,
+		 * read 0.5, in viewport heights of scroll. More scroll per slide makes
+		 * it slower. The keyframe percentages below are these stages as shares
+		 * of the 2.9 total, so change both together.
+		 */
+		--pin-length: 2.9;
+	}
+
+	/* Without scroll-driven animations, or with reduced motion, the panels
+	   simply stack. Touch screens get the stacking cards further down. */
+	.track {
+		display: flex;
+		flex-direction: column;
+		gap: 4rem;
+	}
+
+	h3 {
+		margin: 0 0 1.5rem;
+		font-size: 14px;
+		font-weight: 400;
+		letter-spacing: -0.4px;
+		color: #808080;
+	}
+
+	p {
+		max-width: min(34ch, 100%);
+		margin: 0;
+		font-size: 32px;
+		line-height: 1.3;
+		font-weight: 400;
+		letter-spacing: -1.6px;
+		color: #222;
+	}
+
+	/*
+	 * Pinned mode: the section is taller than the panels, and the panels stick
+	 * in the middle of the viewport while that extra height scrolls past.
+	 * The browser drives the slide straight from the scroll position, in step
+	 * with the page itself, so the two can't drift apart the way a script
+	 * reading the scroll position a frame late does on phones.
+	 *
+	 * Heights use lvh, which stays put while a mobile browser's toolbar slides
+	 * in and out; units that track it would resize the section mid-scroll.
+	 *
+	 * Mouse and trackpad only: touch scrolling still made the slides shake,
+	 * so touch screens get the stacking cards further down instead.
+	 */
+	@supports (animation-timeline: view()) {
+		@media (prefers-reduced-motion: no-preference) and (pointer: fine) {
+			.summary {
+				/* --pin-height is measured by the script below. */
+				--pin-top: max((100lvh - var(--pin-height, 0px)) / 2, 0px);
+				view-timeline: --summary block;
+				/* Progress counts from the moment the panels reach --pin-top and stick. */
+				view-timeline-inset: var(--pin-top) 0px;
+			}
+
+			/* The extra scroll the pin holds for. */
+			.summary::after {
+				content: '';
+				display: block;
+				height: calc(var(--pin-length) * 100lvh);
+			}
+
+			/* `clip` hides the off-screen panels without creating a scroll
+			   container, which would stop `sticky` from working. */
+			.pin {
+				position: sticky;
+				top: var(--pin-top);
+				overflow: clip;
+			}
+
+			.track,
+			.panel {
+				animation-fill-mode: both;
+				animation-timeline: --summary;
+				animation-range: exit-crossing 0% exit-crossing calc(var(--pin-length) * 100lvh);
+			}
+
+			.track {
+				flex-direction: row;
+				gap: 0;
+				width: calc(var(--panel-count) * 100%);
+				animation-name: summary-slide;
+			}
+
+			.panel {
+				flex: 1 1 0;
+				min-width: 0;
+				box-sizing: border-box;
+				padding-right: 2rem;
+			}
+
+			/* Panels fade with their distance from the one at rest, so the
+			   incoming text arrives softly instead of being sliced by the
+			   clipping edge. */
+			.panel:nth-child(1) {
+				animation-name: summary-panel-first;
+			}
+
+			.panel:nth-child(2) {
+				animation-name: summary-panel-middle;
+			}
+
+			.panel:nth-child(3) {
+				animation-name: summary-panel-last;
+			}
+		}
+	}
+
+	/* Each slide accelerates out of a pause and decelerates into the next one
+	   (ease-in-out cubic), instead of starting and stopping at full speed. */
+	@keyframes summary-slide {
+		0%,
+		17.24% {
+			transform: translateX(0);
+			animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+		}
+		41.38%,
+		58.62% {
+			transform: translateX(-33.333%);
+			animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+		}
+		82.76%,
+		100% {
+			transform: translateX(-66.667%);
+		}
+	}
+
+	@keyframes summary-panel-first {
+		0%,
+		17.24% {
+			opacity: 1;
+			animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+		}
+		41.38%,
+		100% {
+			opacity: 0.15;
+		}
+	}
+
+	@keyframes summary-panel-middle {
+		0%,
+		17.24% {
+			opacity: 0.15;
+			animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+		}
+		41.38%,
+		58.62% {
+			opacity: 1;
+			animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+		}
+		82.76%,
+		100% {
+			opacity: 0.15;
+		}
+	}
+
+	@keyframes summary-panel-last {
+		0%,
+		58.62% {
+			opacity: 0.15;
+			animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+		}
+		82.76%,
+		100% {
+			opacity: 1;
+		}
+	}
+
+	.visually-hidden {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	/* inline-block, since transforms don't apply to plain inline text. */
+	.word {
+		display: inline-block;
+	}
+
+	/* Only the stacking cards show their position in the deck. */
+	.step {
+		display: none;
+	}
+
+	/*
+	 * Touch screens: stacking cards. Each panel is a card that sticks near the
+	 * top of the screen, and the next one slides up over it, leaving a sliver
+	 * of the cards beneath showing like a deck. Pure `position: sticky`, which
+	 * the browser moves in step with the scroll, unlike the slide above.
+	 * Equal rows (1fr) make every card as tall as the tallest, so a short card
+	 * never leaves the one beneath poking out of its bottom edge.
+	 */
+	@media (pointer: coarse) {
+		.track {
+			display: grid;
+			/* The empty last row lets the finished deck hold for one more gap
+			   before it scrolls away. */
+			grid-template-rows: repeat(var(--panel-count), 1fr) 0;
+			/* How much scrolling each card gets to itself before the next arrives. */
+			gap: 25svh;
+		}
+
+		.track::after {
+			content: '';
+		}
+
+		.panel {
+			position: sticky;
+			top: calc(1rem + var(--i) * 0.75rem);
+			display: flex;
+			flex-direction: column;
+			padding: 1.25rem;
+			border-radius: 16px;
+			background-color: #f6f6f6;
+			/* A soft edge where each card overlaps the one beneath. */
+			box-shadow: 0 -10px 24px -14px rgb(0 0 0 / 0.18);
+		}
+
+		.panel p {
+			font-size: 24px;
+		}
+
+		/* Sits at the bottom, so the spare height of shorter cards reads as layout. */
+		.step {
+			display: block;
+			margin-top: auto;
+			padding-top: 1.5rem;
+			font-family: var(--font-mono);
+			font-size: var(--text-xs);
+			letter-spacing: var(--tracking-label);
+			color: #a0a0a0;
+		}
+	}
+
+	/*
+	 * Each card's text then writes itself in: the label, then the words one
+	 * after another. Hidden only once the script has set data-reveal, so the
+	 * text never depends on it.
+	 */
+	.summary[data-reveal] :is(h3, .word) {
+		opacity: 0;
+		transform: translateY(0.4em);
+		transition:
+			opacity 0.5s var(--ease-out),
+			transform 0.5s var(--ease-out);
+	}
+
+	.summary[data-reveal] .word {
+		transition-delay: calc(120ms + var(--w) * 24ms);
+	}
+
+	.summary[data-reveal] .shown :is(h3, .word) {
+		opacity: 1;
+		transform: none;
+	}
+
+	@media (max-width: 768px) {
+		.summary {
+			margin-top: 3.5rem;
+		}
+
+		h3 {
+			margin-bottom: 1rem;
+			font-size: 13px;
+		}
+
+		p {
+			font-size: 28px;
+			letter-spacing: -0.5px;
+		}
+	}
+</style>
+
+<script>
+	const touchReveal = window.matchMedia(
+		'(pointer: coarse) and (prefers-reduced-motion: no-preference)',
+	);
+
+	// The first card is often on screen as the page arrives, while the page
+	// transition is still playing over it; hold its reveal until that's done.
+	const revealFrom = performance.now() + 450;
+
+	// Reveal a card's text once its top passes the upper two thirds of the
+	// screen, so it plays as the card comes up to settle rather than as it
+	// first peeks in at the bottom.
+	const revealer = new IntersectionObserver(
+		(entries) => {
+			for (const entry of entries) {
+				if (!entry.isIntersecting) continue;
+				revealer.unobserve(entry.target);
+				setTimeout(
+					() => entry.target.classList.add('shown'),
+					Math.max(revealFrom - performance.now(), 0),
+				);
+			}
+		},
+		{ rootMargin: '0px 0px -35% 0px' },
+	);
+
+	document.querySelectorAll<HTMLElement>('.summary').forEach((summary) => {
+		if (touchReveal.matches) {
+			summary.dataset.reveal = '';
+			summary.querySelectorAll('.panel').forEach((panel) => revealer.observe(panel));
+			return;
+		}
+
+		// Centring the pin in the viewport needs its height, which CSS can't read.
+		// It only changes when the text reflows (width, fonts), never mid-scroll.
+		const pin = summary.querySelector<HTMLElement>('.pin')!;
+		new ResizeObserver(() => {
+			summary.style.setProperty('--pin-height', `${pin.offsetHeight}px`);
+		}).observe(pin);
+	});
+</script>

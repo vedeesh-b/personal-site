@@ -1,0 +1,276 @@
+---
+/*
+ * One prediction going from GridLock's editor to its finished card. The
+ * markup is the finished state, so without JavaScript or with reduced motion
+ * it reads as a before/after pair. With motion, the script replays the parse:
+ * the line types out, the matched keyword lights up, the tier header becomes
+ * the card's title, and the photo grows out of the keyword it was picked by.
+ */
+import type { ImageMetadata } from 'astro';
+import PredictionCard from './PredictionCard.astro';
+
+interface Props {
+	/** The tier header line, without the leading slashes. */
+	comment: string;
+	prediction: string;
+	/** The dictionary word the parser matched, as it appears in the prediction. */
+	keyword: string;
+	tier: number;
+	points: number;
+	image: ImageMetadata;
+	imageAlt: string;
+	caption?: string;
+}
+
+const { comment, prediction, keyword, tier, points, image, imageAlt, caption } =
+	Astro.props;
+
+// Split the prediction around the keyword, then into one span per character
+// for typing. Built as a string so no formatting whitespace sneaks between them.
+const escape = (text: string) =>
+	text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const spans = (text: string) =>
+	[...text].map((char) => `<span class="ch">${escape(char)}</span>`).join('');
+const at = prediction.toLowerCase().indexOf(keyword.toLowerCase());
+const typed =
+	spans('- ') +
+	(at === -1
+		? spans(prediction)
+		: spans(prediction.slice(0, at)) +
+			`<span class="keyword">${spans(prediction.slice(at, at + keyword.length))}</span>` +
+			spans(prediction.slice(at + keyword.length))) +
+	'<span class="caret" aria-hidden="true"></span>';
+---
+
+<figure class="editor-to-card">
+	<div class="panel editor">
+		<p class="comment">// {comment}</p>
+		<div class="bullet">
+			{/* Sizes the box to the finished line, so typing never shifts the layout. */}
+			<span class="ghost" aria-hidden="true">- {prediction}</span>
+			<span class="typed" set:html={typed} />
+		</div>
+	</div>
+
+	<PredictionCard
+		tier={tier}
+		points={points}
+		prediction={prediction}
+		image={image}
+		imageAlt={imageAlt}
+	/>
+
+	{caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+	.editor-to-card {
+		--amber: #b48a46;
+
+		display: grid;
+		gap: 1.25rem;
+		margin: 3rem 0;
+		padding: 1.25rem;
+		border-radius: 16px;
+		background-color: #f6f6f6;
+	}
+
+	.editor {
+		border-radius: 14px;
+		padding: 1.5rem 1.75rem;
+		background-color: #0f0f0f;
+		font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+		font-size: 14px;
+		line-height: 1.85;
+	}
+
+	.comment {
+		margin: 0;
+		color: var(--amber);
+	}
+
+	/* The typed line sits on top of an invisible copy of the finished one. */
+	.bullet {
+		display: grid;
+		color: #fff;
+	}
+
+	.ghost,
+	.typed {
+		grid-area: 1 / 1;
+	}
+
+	.ghost {
+		visibility: hidden;
+	}
+
+	.typed :global(.keyword) {
+		border-radius: 3px;
+		transition:
+			background-color 250ms var(--ease-out),
+			box-shadow 250ms var(--ease-out);
+	}
+
+	.typed :global(.caret) {
+		display: none;
+		width: 0.55em;
+		height: 1.15em;
+		margin-left: 1px;
+		vertical-align: -0.2em;
+		background-color: var(--amber);
+	}
+
+	figcaption {
+		font-size: 13px;
+		color: #6b6b6b;
+	}
+
+	/* --- Playback states, only ever set by the script --- */
+
+	.editor-to-card[data-playing] .typed :global(.ch:not(.on)) {
+		display: none;
+	}
+
+	.editor-to-card[data-typing] .typed :global(.caret) {
+		display: inline-block;
+		animation: blink 1s steps(1) infinite;
+	}
+
+	.editor-to-card[data-matched] .typed :global(.keyword) {
+		background-color: rgb(180 138 70 / 0.28);
+		box-shadow: 0 0 0 2px rgb(180 138 70 / 0.28);
+	}
+
+	.editor-to-card[data-playing] :global(:is(.card-header, .item, .photo, .item-text)) {
+		opacity: 0;
+	}
+
+	@keyframes blink {
+		50% {
+			opacity: 0;
+		}
+	}
+
+	@media (max-width: 768px) {
+		.editor {
+			padding: 1.25rem;
+		}
+	}
+</style>
+
+<script>
+	const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+	const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)';
+	const TYPE_MS = 28;
+
+	document.querySelectorAll<HTMLElement>('.editor-to-card').forEach((figure) => {
+		const chars = [...figure.querySelectorAll<HTMLElement>('.ch')];
+		const keyword = figure.querySelector<HTMLElement>('.keyword');
+		const header = figure.querySelector<HTMLElement>('.card-header')!;
+		const item = figure.querySelector<HTMLElement>('.item')!;
+		const photo = figure.querySelector<HTMLElement>('.photo')!;
+		const text = figure.querySelector<HTMLElement>('.item-text')!;
+
+		// Each run gets an id; bumping it makes any older run stop at its next wait.
+		let run = 0;
+		let animations: Animation[] = [];
+
+		const wait = (ms: number, id: number) =>
+			new Promise<boolean>((resolve) =>
+				setTimeout(() => resolve(id === run), ms),
+			);
+
+		function show(el: HTMLElement, frames: Keyframe[], options: KeyframeAnimationOptions) {
+			const animation = el.animate(frames, { fill: 'forwards', easing: EASE_OUT, ...options });
+			animations.push(animation);
+			return animation;
+		}
+
+		function reset() {
+			animations.forEach((animation) => animation.cancel());
+			animations = [];
+			chars.forEach((char) => char.classList.remove('on'));
+			delete figure.dataset.typing;
+			delete figure.dataset.matched;
+		}
+
+		// Back to the finished card, as it reads without the script.
+		function stop() {
+			run++;
+			reset();
+			delete figure.dataset.playing;
+		}
+
+		async function play() {
+			const id = ++run;
+			reset();
+			figure.dataset.playing = '';
+
+			// 1. Type the prediction.
+			if (!(await wait(500, id))) return;
+			figure.dataset.typing = '';
+			// Paced by elapsed time, not timer ticks, so throttled timers can't slow it.
+			const typingStart = performance.now();
+			let typed = 0;
+			while (typed < chars.length) {
+				const due = Math.floor((performance.now() - typingStart) / TYPE_MS) + 1;
+				while (typed < Math.min(due, chars.length)) chars[typed++].classList.add('on');
+				if (!(await wait(TYPE_MS, id))) return;
+			}
+			delete figure.dataset.typing;
+
+			// 2. The parser finds the keyword.
+			if (!(await wait(250, id))) return;
+			figure.dataset.matched = '';
+			if (!(await wait(700, id))) return;
+
+			// 3. The tier header becomes the card's title.
+			show(header, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 400 });
+			show(item, [{ opacity: 0 }, { opacity: 1 }], { duration: 400, delay: 120 });
+			if (!(await wait(300, id))) return;
+
+			// 4. The photo grows out of the keyword that picked it, then the text lands.
+			if (keyword) {
+				const from = keyword.getBoundingClientRect();
+				const to = photo.getBoundingClientRect();
+				const scale = from.height / to.height;
+				photo.style.transformOrigin = 'top left';
+				show(
+					photo,
+					[
+						{
+							opacity: 0,
+							transform: `translate(${from.left - to.left}px, ${from.top - to.top}px) scale(${scale})`,
+						},
+						{ opacity: 1, offset: 0.25 },
+						{ opacity: 1, transform: 'none' },
+					],
+					{ duration: 750 },
+				);
+			} else {
+				show(photo, [{ opacity: 0 }, { opacity: 1 }], { duration: 400 });
+			}
+			show(text, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 500, delay: 350 });
+
+			// 5. Hold the finished card, fade, and go again.
+			if (!(await wait(3800, id))) return;
+			const fade = { duration: 350, easing: 'ease-in', fill: 'forwards' as const };
+			[figure.querySelector('.typed')!, header, item].forEach((el) =>
+				animations.push(el.animate([{ opacity: 1 }, { opacity: 0 }], fade)),
+			);
+			if (!(await wait(450, id))) return;
+			play();
+		}
+
+		if (reducedMotion.matches) return;
+
+		new IntersectionObserver(
+			([entry]) => (entry.isIntersecting ? play() : stop()),
+			{ threshold: 0.5 },
+		).observe(figure);
+
+		reducedMotion.addEventListener('change', () => {
+			if (reducedMotion.matches) stop();
+		});
+	});
+</script>

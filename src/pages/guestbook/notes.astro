@@ -1,0 +1,13 @@
+---
+import GuestbookNotes from '../../components/guestbook/GuestbookNotes.astro';
+
+// Just the notes, no page around them: the guestbook's script fetches this
+// after posting and for "Older notes".
+export const partial = true;
+export const prerender = false;
+
+// ?before=<id> shows the notes older than that one.
+const before = Number(Astro.url.searchParams.get('before')) || undefined;
+---
+
+<GuestbookNotes before={before} />

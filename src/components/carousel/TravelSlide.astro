@@ -1,0 +1,165 @@
+---
+import Globe from '../ui/Globe.astro';
+import HomeIcon from '../ui/HomeIcon.astro';
+import { home, travel } from '../../data/travel';
+---
+
+<div class="travel">
+	<div class="globe-area">
+		<Globe />
+	</div>
+	<div class="list">
+		<dl>
+			{
+				travel.map((year) => (
+					<div class="year">
+						<dt style={`grid-row: span ${year.countries.length}`}>
+							{year.label}
+						</dt>
+						{year.countries.map((country) => (
+							<dd>
+								<img
+									class="flag"
+									src={country.flag}
+									alt=""
+									width="20"
+									height="15"
+									loading="lazy"
+									decoding="async"
+								/>
+								<span class="name">{country.name}</span>
+							</dd>
+						))}
+					</div>
+				))
+			}
+			<div class="year">
+				<dt class="home">
+					<HomeIcon size={16} />
+				</dt>
+				<dd>
+					<img
+						class="flag"
+						src={home.flag}
+						alt=""
+						width="20"
+						height="15"
+						loading="lazy"
+						decoding="async"
+					/>
+					<span class="name">{home.name}</span>
+				</dd>
+			</div>
+		</dl>
+	</div>
+</div>
+
+<style>
+	.travel {
+		display: grid;
+		/* The list keeps room for its longest name; the globe gives way. */
+		grid-template-columns: minmax(0, 2fr) minmax(19rem, 1fr);
+		height: 100%;
+		box-sizing: border-box;
+		padding: 12px;
+		gap: 12px;
+	}
+
+	.globe-area {
+		min-height: 0;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	/* Phones: no room for both, so the list takes the whole slide. */
+	@media (max-width: 639px) {
+		.travel {
+			grid-template-columns: 1fr;
+		}
+
+		.globe-area {
+			display: none;
+		}
+	}
+
+	.list {
+		overflow-y: auto;
+		background-color: #fffcf7;
+		border-radius: 12px;
+		padding: 16px 20px;
+		font-size: 13px;
+		cursor: default;
+	}
+
+	dl {
+		margin: 0;
+	}
+
+	/* Every year uses the same fixed columns, so years, flags and names
+	   line up down the whole list. */
+	.year {
+		display: grid;
+		grid-template-columns: 4.5rem 1fr;
+		row-gap: 16px;
+		column-gap: 20px;
+		margin-bottom: 1.8rem;
+	}
+
+	.year:last-child {
+		margin-bottom: 0;
+	}
+
+	.name {
+		font-size: 14px;
+		line-height: 15px;
+		font-weight: 400;
+		color: #666;
+		letter-spacing: -0.325px;
+		transition-duration: 0.3s;
+	}
+
+	.name:hover {
+		color: #111;
+		transition-duration: 0.3s;
+	}
+
+	/* Centered in its column, and across its countries when there are
+	   several. */
+	dt {
+		align-self: flex-start;
+		text-align: left;
+		color: #111;
+		font-variant-numeric: tabular-nums;
+		font-family: var(--font-mono);
+	}
+
+	/* Same orange as home's dots on the globe. */
+	dt.home {
+		display: flex;
+		align-items: center;
+		gap: 5px;
+	}
+
+	dt.home :global(svg) {
+		color: #545454;
+	}
+
+	dd {
+		grid-column: 2;
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		margin: 0;
+	}
+
+	/* A hairline edge so mostly-white flags (Japan, Singapore) don't melt
+	   into the card. */
+	.flag {
+		flex-shrink: 0;
+		width: 20px;
+		height: 15px;
+		border-radius: 1px;
+		border: 0.5px #cdcdcd solid;
+	}
+</style>

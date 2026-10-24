@@ -1,0 +1,408 @@
+---
+import { getGlobeDots } from '../../lib/globeDots';
+import HomeIcon from './HomeIcon.astro';
+import { home, travel } from '../../data/travel';
+
+const dots = getGlobeDots();
+// One label per visited country (and home), pointing at its anchor.
+const label = (
+	{ name, flag, anchor: [lon, lat] }: typeof home,
+	isHome = false,
+) => ({ name, flag, lon, lat, home: isHome });
+const countries = [
+	label(home, true),
+	...travel.flatMap((year) => year.countries.map((country) => label(country))),
+];
+---
+
+<div
+	class="globe"
+	data-dots={JSON.stringify(dots)}
+	data-countries={JSON.stringify(countries)}
+>
+	<canvas
+		role="img"
+		aria-label="Rotating globe highlighting India, where I grew up, and the countries I've visited"
+	></canvas>
+	<div class="callouts" aria-hidden="true"></div>
+	<!-- Cloned into home's label by the script below. -->
+	<template id="home-icon"><HomeIcon class="home-icon" size={12} /></template>
+</div>
+
+<style>
+	/* Fills its area so labels have room around the sphere, which is drawn
+	   at 80% of it. */
+	.globe {
+		position: relative;
+		width: 100%;
+		height: 100%;
+	}
+
+	canvas {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+
+	.callouts {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+
+	.callouts :global(.callout) {
+		position: absolute;
+		top: 0;
+		left: 0;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 4px 8px;
+		border-radius: 8px;
+		background-color: #fffcf7;
+		box-shadow: 0 2px 8px rgb(0 0 0 / 0.2);
+		color: #545454;
+		font-size: 12px;
+		line-height: 1.3;
+		white-space: nowrap;
+		opacity: 0;
+		scale: 0.96;
+		transition:
+			opacity 200ms var(--ease-out),
+			scale 200ms var(--ease-out);
+		transition-delay: 0ms;
+	}
+
+	.callouts :global(.callout img) {
+		width: 15px;
+		height: 11px;
+		border-radius: 1px;
+		border: #cdcdcd solid 0.5px;
+	}
+
+	.callouts :global(.home-icon) {
+		flex-shrink: 0;
+		color: #404040;
+	}
+
+	.globe[data-labelled] :global(.callout[data-visible]) {
+		opacity: 1;
+		scale: 1;
+		transition-delay: calc(var(--i, 0) * 30ms);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.callouts :global(.callout) {
+			scale: none;
+		}
+	}
+</style>
+
+<script>
+	type Dot = [number, number, 0 | 1 | 2];
+	type Country = {
+		name: string;
+		flag: string;
+		lon: number;
+		lat: number;
+		home: boolean;
+	};
+	type Box = { x: number; y: number; w: number; h: number };
+	// A label, where it goes, and the dot it points at.
+	type Placed = {
+		el: HTMLElement;
+		color: string;
+		ax: number;
+		ay: number;
+		box: Box;
+	};
+
+	const COLORS = {
+		sphere: '#272727',
+		land: '#b5a992',
+		visited: '#e0662f',
+		// Deeper and redder than visited, but just as bright against the
+		// sphere, so home doesn't recede.
+		home: '#ff5a1f',
+	};
+	// Degrees of rotation per second, and a fixed tilt so the northern
+	// hemisphere (where most of the land is) faces the viewer.
+	const SPEED = 8;
+	const TILT = 20;
+	const RAD = Math.PI / 180;
+	// The sphere's share of the canvas; the rest is room for labels.
+	const SPHERE = 0.8;
+	// Countries this close to the edge of the visible side get no label.
+	const MIN_DEPTH = 0.15;
+	// How far outside the sphere the label columns sit, and the gap kept
+	// between labels and from the canvas edge.
+	const REACH = 28;
+	const GAP = 4;
+	// Seconds for the rotation to ease to a stop (or back up to speed).
+	const EASE_TIME = 0.12;
+
+	document.querySelectorAll<HTMLElement>('.globe').forEach((container) => {
+		const canvas = container.querySelector('canvas')!;
+		const ctx = canvas.getContext('2d')!;
+		const layer = container.querySelector<HTMLElement>('.callouts')!;
+		const dots = (JSON.parse(container.dataset.dots!) as Dot[]).map(
+			([lon, lat, kind]) => ({
+				lambda: lon * RAD,
+				sinPhi: Math.sin(lat * RAD),
+				cosPhi: Math.cos(lat * RAD),
+				color: [COLORS.land, COLORS.visited, COLORS.home][kind],
+				marked: kind > 0,
+			}),
+		);
+		const countries = (
+			JSON.parse(container.dataset.countries!) as Country[]
+		).map((country) => {
+			const el = document.createElement('div');
+			el.className = 'callout';
+			const flag = document.createElement('img');
+			flag.src = country.flag;
+			flag.alt = '';
+			el.append(flag);
+			if (country.home) {
+				const icon =
+					container.querySelector<HTMLTemplateElement>('#home-icon')!;
+				el.append(icon.content.cloneNode(true));
+			}
+			el.append(country.name);
+			layer.append(el);
+			return {
+				el,
+				color: country.home ? COLORS.home : COLORS.visited,
+				lambda: country.lon * RAD,
+				sinPhi: Math.sin(country.lat * RAD),
+				cosPhi: Math.cos(country.lat * RAD),
+			};
+		});
+
+		const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+		const sinTilt = Math.sin(TILT * RAD);
+		const cosTilt = Math.cos(TILT * RAD);
+		// Start with Europe facing the viewer.
+		let rotation = -15;
+		let width = 0;
+		let height = 0;
+		// 1 while spinning, 0 while paused; eased between the two.
+		let speed = 1;
+		let paused = false;
+
+		const resize = () => {
+			const dpr = window.devicePixelRatio || 1;
+			width = container.clientWidth;
+			height = container.clientHeight;
+			canvas.width = width * dpr;
+			canvas.height = height * dpr;
+			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+			draw();
+		};
+
+		// Orthographic projection of a point on the globe: where it lands and
+		// how far it faces the viewer (above 0 means on the visible side).
+		const project = (
+			point: { lambda: number; sinPhi: number; cosPhi: number },
+			cx: number,
+			cy: number,
+			r: number,
+		) => {
+			const delta = point.lambda - rotation * RAD;
+			const cosDelta = Math.cos(delta);
+			return {
+				x: cx + r * point.cosPhi * Math.sin(delta),
+				y:
+					cy - r * (cosTilt * point.sinPhi - sinTilt * point.cosPhi * cosDelta),
+				depth: sinTilt * point.sinPhi + cosTilt * point.cosPhi * cosDelta,
+			};
+		};
+
+		// Labels sit in a column on each side, just clear of the sphere, so
+		// they never cover the countries. The visible countries split at
+		// their middle: the western half is labelled on the left, the eastern
+		// half on the right, which keeps the columns even and the lines short
+		// even when they're all bunched up (Europe). Each column follows its
+		// countries top to bottom, spread so no two labels overlap. Returns
+		// each label with the dot it points at.
+		const layOut = (cx: number, cy: number, r: number) => {
+			const sides: Record<'left' | 'right', Placed[]> = { left: [], right: [] };
+			const visible = countries
+				.map((country) => ({ country, p: project(country, cx, cy, r) }))
+				.filter(({ country, p }) => {
+					if (p.depth > MIN_DEPTH) return true;
+					delete country.el.dataset.visible;
+					return false;
+				})
+				.sort((a, b) => a.p.x - b.p.x);
+			for (const [i, { country, p }] of visible.entries()) {
+				const w = country.el.offsetWidth;
+				const h = country.el.offsetHeight;
+				const western =
+					visible.length === 1 ? p.x < cx : i < visible.length / 2;
+				const side = western ? 'left' : 'right';
+				const x =
+					side === 'right'
+						? Math.min(cx + r + REACH, width - w - GAP)
+						: Math.max(cx - r - REACH - w, GAP);
+				sides[side].push({
+					el: country.el,
+					color: country.color,
+					ax: p.x,
+					ay: p.y,
+					box: { x, y: p.y - h / 2, w, h },
+				});
+			}
+
+			for (const column of Object.values(sides)) {
+				column.sort((a, b) => a.ay - b.ay);
+				// Top to bottom, each label goes below the one before it…
+				let floor = GAP;
+				for (const { box } of column) {
+					box.y = Math.max(box.y, floor);
+					floor = box.y + box.h + GAP;
+				}
+				// …and if that ran off the bottom, slide the column back up.
+				let ceiling = height - GAP;
+				for (const { box } of [...column].reverse()) {
+					box.y = Math.min(box.y, ceiling - box.h);
+					ceiling = box.y - GAP;
+				}
+			}
+
+			const placed = [...sides.left, ...sides.right].sort(
+				(a, b) => a.ay - b.ay,
+			);
+			placed.forEach(({ el, box }, i) => {
+				el.style.translate = `${box.x}px ${box.y}px`;
+				el.style.setProperty('--i', String(i));
+				el.dataset.visible = '';
+			});
+			return placed;
+		};
+
+		// A dashed line from the dot to the nearest point on its label, and a
+		// ring around the dot.
+		const drawLeader = ({ ax, ay, box, color }: Placed) => {
+			const tx = Math.min(Math.max(ax, box.x), box.x + box.w);
+			const ty = Math.min(Math.max(ay, box.y), box.y + box.h);
+			ctx.strokeStyle = color;
+			ctx.lineWidth = 1;
+			ctx.globalAlpha = 0.7;
+			ctx.setLineDash([3, 3]);
+			ctx.beginPath();
+			ctx.moveTo(ax, ay);
+			ctx.lineTo(tx, ty);
+			ctx.stroke();
+			ctx.setLineDash([]);
+			ctx.globalAlpha = 1;
+			ctx.beginPath();
+			ctx.arc(ax, ay, 3, 0, Math.PI * 2);
+			ctx.stroke();
+		};
+
+		const draw = () => {
+			const cx = width / 2;
+			const cy = height / 2;
+			const r = (Math.min(width, height) / 2) * SPHERE - 8;
+			const dotRadius = Math.max(1, r * 0.011);
+
+			ctx.clearRect(0, 0, width, height);
+			// Hidden (the travel slide drops the globe on phones): nothing to
+			// draw, and arc() throws on a negative radius.
+			if (r <= 0) return;
+			ctx.fillStyle = COLORS.sphere;
+			ctx.beginPath();
+			ctx.arc(cx, cy, r, 0, Math.PI * 2);
+			ctx.fill();
+
+			for (const dot of dots) {
+				const p = project(dot, cx, cy, r);
+				if (p.depth <= 0) continue;
+				ctx.globalAlpha = 0.25 + 0.75 * p.depth;
+				ctx.fillStyle = dot.color;
+				ctx.beginPath();
+				ctx.arc(
+					p.x,
+					p.y,
+					dot.marked ? dotRadius * 1.3 : dotRadius,
+					0,
+					Math.PI * 2,
+				);
+				ctx.fill();
+			}
+			ctx.globalAlpha = 1;
+
+			// Labels only once the globe has (nearly) stopped.
+			if (paused && speed < 0.1) {
+				container.dataset.labelled = '';
+				for (const placed of layOut(cx, cy, r)) drawLeader(placed);
+			} else {
+				delete container.dataset.labelled;
+			}
+		};
+
+		let frame = 0;
+		let last = 0;
+		let onScreen = false;
+		const tick = (time: number) => {
+			const dt = last ? (time - last) / 1000 : 0;
+			last = time;
+			const target = paused ? 0 : 1;
+			speed += (target - speed) * (1 - Math.exp(-dt / EASE_TIME));
+			if (Math.abs(target - speed) < 0.001) speed = target;
+			if (!reducedMotion.matches) rotation += SPEED * speed * dt;
+			draw();
+			// Paused and stopped: nothing moves until the pointer leaves.
+			frame = paused && speed === 0 ? 0 : requestAnimationFrame(tick);
+		};
+		const start = () => {
+			if (frame || !onScreen) return;
+			if (reducedMotion.matches && !paused) {
+				speed = 1;
+				draw();
+				return;
+			}
+			last = 0;
+			frame = requestAnimationFrame(tick);
+		};
+		const stop = () => {
+			cancelAnimationFrame(frame);
+			frame = 0;
+		};
+
+		const pause = (value: boolean) => {
+			paused = value;
+			if (reducedMotion.matches) {
+				// Nothing to ease: show or hide the labels straight away.
+				speed = value ? 0 : 1;
+				draw();
+			} else {
+				start();
+			}
+		};
+
+		new ResizeObserver(resize).observe(container);
+
+		// Only animate while the globe is actually on screen (this includes
+		// when its carousel slide is scrolled out of view).
+		new IntersectionObserver(([entry]) => {
+			onScreen = entry.isIntersecting;
+			onScreen ? start() : stop();
+		}).observe(container);
+		reducedMotion.addEventListener('change', () =>
+			reducedMotion.matches ? stop() : start(),
+		);
+
+		// Mouse: pause while hovering. Touch: a tap toggles it.
+		canvas.addEventListener('pointerenter', (event) => {
+			if (event.pointerType === 'mouse') pause(true);
+		});
+		canvas.addEventListener('pointerleave', (event) => {
+			if (event.pointerType === 'mouse') pause(false);
+		});
+		canvas.addEventListener('pointerup', (event) => {
+			if (event.pointerType !== 'mouse') pause(!paused);
+		});
+	});
+</script>

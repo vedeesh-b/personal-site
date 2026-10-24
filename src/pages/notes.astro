@@ -1,0 +1,29 @@
+---
+import ConstructionScene from "../components/ConstructionScene.astro";
+import Layout from "../layouts/Layout.astro";
+// Posts (src/components/sections/Posts.astro) comes back here once there
+// are notes to show.
+---
+
+<Layout title="Notes">
+	<main>
+		<h1 style="view-transition-name: page-title">Notes</h1>
+		<ConstructionScene />
+	</main>
+</Layout>
+
+<style>
+	main {
+		box-sizing: border-box;
+		padding: var(--page-padding-y) var(--page-padding-x);
+	}
+
+    h1 {
+		font-size: var(--text-xl);
+		margin-top: 0.25em;
+		padding-bottom: 0.5em;
+		font-weight: 500;
+		color: #111;
+		letter-spacing: var(--tracking-tight);
+	}
+</style>

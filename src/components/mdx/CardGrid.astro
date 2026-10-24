@@ -1,0 +1,138 @@
+---
+/*
+ * A titled panel of cards in a grid: each card has a heading, an optional
+ * badge beside it and a line of body text. Works for any set of short,
+ * parallel items, e.g. scoring tiers or options being compared.
+ */
+import Badge from './Badge.astro';
+
+interface Card {
+	title: string;
+	badge?: string;
+	body: string;
+}
+
+interface Props {
+	title: string;
+	description?: string;
+	cards: Card[];
+	/** Columns from tablet width up; phones always get one. */
+	columns?: number;
+	caption?: string;
+}
+
+const { title, description, cards, columns = 2, caption } = Astro.props;
+---
+
+<figure class="card-grid" style={`--columns: ${columns}`}>
+	<div class="intro">
+		<div class="title">{title}</div>
+		{description && <p class="description">{description}</p>}
+	</div>
+
+	<ul class="cards">
+		{
+			cards.map((card) => (
+				<li class="card">
+					<div class="card-heading">
+						<span class="card-title">{card.title}</span>
+						{card.badge && <Badge>{card.badge}</Badge>}
+					</div>
+					<p class="card-body">{card.body}</p>
+				</li>
+			))
+		}
+	</ul>
+
+	{caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+	.card-grid {
+		--ink: #222;
+		--muted: #6b6b6b;
+
+		margin: 3rem 0;
+		padding: 2rem;
+		border-radius: 20px;
+		background-color: #f6efe4;
+	}
+
+	.intro {
+		margin-bottom: 1.5rem;
+	}
+
+	.title {
+		font-size: 20px;
+		font-weight: 500;
+		letter-spacing: -0.3px;
+		color: var(--ink);
+	}
+
+	.description {
+		max-width: 52ch;
+		margin: 0.5rem 0 0;
+		font-size: 15px;
+		line-height: 1.5;
+		color: var(--muted);
+	}
+
+	.cards {
+		display: grid;
+		grid-template-columns: repeat(var(--columns), minmax(0, 1fr));
+		gap: 0.75rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.card {
+		margin: 0;
+		padding: 1rem 1.1rem;
+		border: 1.5px solid #ddd;
+		border-radius: 12px;
+		background-color: #fff;
+	}
+
+	.card-heading {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.25rem 0.5rem;
+	}
+
+	/* Badge carries its own trailing margin for inline use; the gap handles it here. */
+	.card-heading :global(.badge) {
+		margin: 0;
+	}
+
+	.card-title {
+		font-size: 16px;
+		font-weight: 500;
+		letter-spacing: -0.3px;
+		color: var(--ink);
+	}
+
+	.card-body {
+		margin: 0.4rem 0 0;
+		font-size: 14px;
+		line-height: 1.45;
+		color: var(--muted);
+	}
+
+	figcaption {
+		margin-top: 1.25rem;
+		font-size: 13px;
+		color: var(--muted);
+	}
+
+	@media (max-width: 640px) {
+		.card-grid {
+			padding: 1.25rem;
+		}
+
+		.cards {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
